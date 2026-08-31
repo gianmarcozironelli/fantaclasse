@@ -61,9 +61,11 @@ export async function createDemoAuction(baseUrl: string) {
     teams.push(team);
   }
 
-  // Pre-purchase a dozen notable players spread across the bot teams
+  // Pre-purchase a dozen notable players spread across the bot teams.
+  // Whatever list is loaded is used — so a demo run after importing the real
+  // quotazioni file uses real players rather than the bundled samples.
   const notable = await prisma.player.findMany({
-    where: { currentQuotation: { gte: 9 }, externalId: { startsWith: "sample-" } },
+    where: { active: true, currentQuotation: { gte: 9 } },
     orderBy: { currentQuotation: "desc" },
     take: 60,
   });

@@ -2,9 +2,15 @@ import type { Role } from "../lib/domain/types";
 import { PlayerInput, teamAbbreviation } from "../lib/import/provider";
 
 /**
- * Bundled sample Serie A list so the app works out of the box (and powers the
- * demo). Before a real auction the admin imports the up-to-date Fantacalcio.it
- * quotazioni file — this data is only a fallback/reference.
+ * SAMPLE DATA — NOT OFFICIAL. Hand-written so the app runs out of the box and
+ * the demo has something to auction. Nothing here is scraped from
+ * Fantacalcio.it and no API is called.
+ *
+ * The names, clubs and roles below are real players to the best of the author's
+ * knowledge (roughly 2025/26 squads), but the QUOTATIONS AND FVM VALUES ARE
+ * ESTIMATES, not the official numbers. Before a real auction the admin imports
+ * the official quotazioni file, which retires everything not in it.
+ *
  * [displayName, teamName, role, quotation, fvm]
  */
 const REAL: [string, string, Role, number, number][] = [
@@ -237,8 +243,9 @@ const TEAMS = [
 const PER_TEAM: Record<Role, number> = { P: 3, D: 8, C: 8, A: 5 };
 
 /**
- * Real notable players plus deterministic generated depth players so every
- * Serie A club fields a full squad (needed to complete 8×25 rosters in demo).
+ * Real notable players plus INVENTED filler players (common Italian surnames)
+ * so every club fields a full squad — without them eight teams cannot complete
+ * 25-man rosters in the demo. The generated players are not real footballers.
  */
 export function buildSamplePlayers(): PlayerInput[] {
   const players: PlayerInput[] = REAL.map(([displayName, teamName, role, q, fvm], i) => ({

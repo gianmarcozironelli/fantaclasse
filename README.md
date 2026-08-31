@@ -25,6 +25,28 @@ Open the homepage and click **PROVA LA DEMO** — it seeds an 8-team auction wit
 credits, a sample Serie A list, a few players already sold, and bots that place real bids
 so you can test realtime without eight physical phones.
 
+## ⚠️ About the bundled player list
+
+**The player list shipped in this repo is sample data, not official data.** It was written
+by hand so the app runs out of the box and the demo has something to auction. Specifically:
+
+- ~200 **real Serie A players** (names, clubs, roles) — accurate to the best of the
+  author's knowledge, but reflecting roughly the 2025/26 squads, so some transfers are stale.
+- **Quotations and FVM values are estimates**, not the official Fantacalcio.it numbers.
+  They look plausible; they are not authoritative and will not match your league.
+- **~300 invented filler players** (Rossi, Bianchi, Ferrari…) padding each club to a full
+  squad, so eight teams can actually complete 25-man rosters in the demo.
+  **These people do not exist.**
+
+Nothing here was scraped from Fantacalcio.it and no external API is called — that is
+deliberate (their quotations are their data, and redistributing them in a public repo
+would not be ours to do).
+
+**Before a real auction**, download the official *Quotazioni* export from Fantacalcio.it
+and upload it at `/a/{id}/settings`. Leave **"Sostituisci l'intera lista"** ticked and the
+sample players are retired from the board in one step. Players already bought stay visible
+in the auctions that used them, so history is never lost.
+
 ## Scripts
 
 | command | what it does |

@@ -19,10 +19,14 @@ export async function POST(req: NextRequest, { params }: Params) {
 
   const contentType = req.headers.get("content-type") ?? "";
   let result;
+  // A quotazioni file is the authoritative list: by default anything absent
+  // from it (the bundled sample players included) is retired from the board.
+  let replaceList = false;
 
   if (contentType.includes("multipart/form-data")) {
     const form = await req.formData();
     const file = form.get("file");
+    replaceList = form.get("replaceList") !== "false";
     if (!(file instanceof File)) {
       return NextResponse.json({ error: "File mancante" }, { status: 400 });
     }
@@ -50,6 +54,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     season: auction.season,
     source: result.source,
     recordSeasonData: true,
+    deactivateMissing: replaceList,
   });
 
   await prisma.auctionEvent.create({

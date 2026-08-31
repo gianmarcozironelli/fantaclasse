@@ -38,6 +38,7 @@ export default function SettingsPage() {
   const [data, setData] = useState<AuctionData | null>(null);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   const [importing, setImporting] = useState(false);
+  const [replaceList, setReplaceList] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => setToken(getAdminToken(id)), [id]);
@@ -110,6 +111,7 @@ export default function SettingsPage() {
     try {
       const form = new FormData();
       form.append("file", file);
+      form.append("replaceList", String(replaceList));
       const res = await fetch(`/api/auctions/${id}/import`, {
         method: "POST",
         headers: { "x-admin-token": token },
@@ -120,7 +122,7 @@ export default function SettingsPage() {
       else
         flash(
           "ok",
-          `Import completato: ${body.created} nuovi, ${body.updated} aggiornati${body.warnings?.length ? ` (${body.warnings.length} avvisi)` : ""}`,
+          `Import completato: ${body.created} nuovi, ${body.updated} aggiornati${body.deactivated ? `, ${body.deactivated} rimossi dal tabellone` : ""}${body.warnings?.length ? ` (${body.warnings.length} avvisi)` : ""}`,
         );
     } finally {
       setImporting(false);
@@ -165,6 +167,29 @@ export default function SettingsPage() {
           oppure qualsiasi foglio con <code className="text-ink-100">Nome</code>, <code className="text-ink-100">R</code>/<code className="text-ink-100">Ruolo</code> e{" "}
           <code className="text-ink-100">Squadra</code>. I giocatori già acquistati non vengono toccati.
         </p>
+        <div className="mt-3 rounded border border-gold-400/40 bg-gold-400/5 p-3 text-sm">
+          <strong className="text-gold-300">Nota sulla lista precaricata:</strong>{" "}
+          <span className="text-ink-300">
+            i giocatori inclusi nell&apos;app sono dati di esempio scritti a mano (quotazioni
+            e FVM indicativi, più alcuni nomi inventati per riempire le rose). Servono solo
+            per provare l&apos;app: prima di un&apos;asta vera carica il file ufficiale.
+          </span>
+        </div>
+        <label className="mt-3 flex cursor-pointer items-start gap-2.5 text-sm">
+          <input
+            type="checkbox"
+            checked={replaceList}
+            onChange={(e) => setReplaceList(e.target.checked)}
+            className="mt-0.5 h-4 w-4 accent-emerald-500"
+          />
+          <span>
+            Sostituisci l&apos;intera lista
+            <span className="block text-xs text-ink-400">
+              I giocatori assenti dal file spariscono dal tabellone (così i dati di esempio
+              non restano in mezzo). Chi è già stato acquistato resta sempre visibile.
+            </span>
+          </span>
+        </label>
         <input
           ref={fileRef}
           type="file"

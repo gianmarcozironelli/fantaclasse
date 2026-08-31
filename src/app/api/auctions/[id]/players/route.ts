@@ -27,24 +27,32 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   const players = await prisma.player.findMany({
     where: {
-      active: true,
-      ...(role && ["P", "D", "C", "A"].includes(role) ? { role: role as "P" | "D" | "C" | "A" } : {}),
-      ...(teamAbbr ? { teamAbbr } : {}),
-      ...(qmin !== undefined || qmax !== undefined
-        ? { currentQuotation: { ...(qmin !== undefined ? { gte: qmin } : {}), ...(qmax !== undefined ? { lte: qmax } : {}) } }
-        : {}),
-      ...(q
-        ? {
-            OR: [
-              // searchName is accent-stripped and lowercased, so "leao"
-              // matches "Leão" and "soule" matches "Soulé"
-              { searchName: { contains: normalizeSearch(q) } },
-              { displayName: { contains: q, mode: "insensitive" } },
-              { teamName: { contains: q, mode: "insensitive" } },
-              { teamAbbr: { contains: q, mode: "insensitive" } },
-            ],
-          }
-        : {}),
+      AND: [
+        // Retired players (dropped by a full list import) stay visible in an
+        // auction that already used them, so sold history never disappears.
+        { OR: [{ active: true }, { auctionPlayers: { some: { auctionId: id } } }] },
+        ...(role && ["P", "D", "C", "A"].includes(role)
+          ? [{ role: role as "P" | "D" | "C" | "A" }]
+          : []),
+        ...(teamAbbr ? [{ teamAbbr }] : []),
+        ...(qmin !== undefined || qmax !== undefined
+          ? [{ currentQuotation: { ...(qmin !== undefined ? { gte: qmin } : {}), ...(qmax !== undefined ? { lte: qmax } : {}) } }]
+          : []),
+        ...(q
+          ? [
+              {
+                OR: [
+                  // searchName is accent-stripped and lowercased, so "leao"
+                  // matches "Leão" and "soule" matches "Soulé"
+                  { searchName: { contains: normalizeSearch(q) } },
+                  { displayName: { contains: q, mode: "insensitive" as const } },
+                  { teamName: { contains: q, mode: "insensitive" as const } },
+                  { teamAbbr: { contains: q, mode: "insensitive" as const } },
+                ],
+              },
+            ]
+          : []),
+      ],
     },
     orderBy:
       sort === "name"

@@ -5,6 +5,8 @@ import { buildSamplePlayers } from "../data/serie-a-players";
 export interface UpsertStats {
   created: number;
   updated: number;
+  /** players removed from the board because a full list replaced them */
+  deactivated: number;
 }
 
 /**
@@ -15,7 +17,13 @@ export interface UpsertStats {
  */
 export async function upsertPlayers(
   inputs: PlayerInput[],
-  opts: { season: string; source: string; recordSeasonData?: boolean },
+  opts: {
+    season: string;
+    source: string;
+    recordSeasonData?: boolean;
+    /** treat `inputs` as the complete list and retire everything else */
+    deactivateMissing?: boolean;
+  },
 ): Promise<UpsertStats> {
   const existing = await prisma.player.findMany({
     select: { id: true, externalId: true, displayName: true, teamAbbr: true },
@@ -77,17 +85,20 @@ export async function upsertPlayers(
     );
   }
 
+  // resolve the ids the import actually covers (creates have no ids until now)
+  const all = await prisma.player.findMany({
+    select: { id: true, externalId: true, displayName: true, teamAbbr: true },
+  });
+  const byExt = new Map(all.filter((p) => p.externalId).map((p) => [p.externalId!, p]));
+  const byNm = new Map(all.map((p) => [`${p.displayName.toLowerCase()}|${p.teamAbbr}`, p]));
+  const matchOf = (input: PlayerInput) =>
+    (input.externalId && byExt.get(input.externalId)) ||
+    byNm.get(`${input.displayName.toLowerCase()}|${input.teamAbbr}`);
+
   if (opts.recordSeasonData) {
-    const all = await prisma.player.findMany({
-      select: { id: true, externalId: true, displayName: true, teamAbbr: true },
-    });
-    const byExt = new Map(all.filter((p) => p.externalId).map((p) => [p.externalId!, p]));
-    const byNm = new Map(all.map((p) => [`${p.displayName.toLowerCase()}|${p.teamAbbr}`, p]));
     const rows = inputs
       .map((input) => {
-        const match =
-          (input.externalId && byExt.get(input.externalId)) ||
-          byNm.get(`${input.displayName.toLowerCase()}|${input.teamAbbr}`);
+        const match = matchOf(input);
         return match
           ? {
               playerId: match.id,
@@ -103,7 +114,26 @@ export async function upsertPlayers(
     if (rows.length > 0) await prisma.playerSeasonData.createMany({ data: rows });
   }
 
-  return { created: creates.length, updated: updates.length };
+  let deactivated = 0;
+  if (opts.deactivateMissing) {
+    // An official quotazioni file IS the whole list, so anything absent from it
+    // (notably the bundled sample players) is retired. Retiring is not deleting:
+    // an auction that already used a player still shows it, because the board
+    // query also matches players with an AuctionPlayer row in that auction.
+    const keep = new Set<string>();
+    for (const input of inputs) {
+      const match = matchOf(input);
+      if (match) keep.add(match.id);
+    }
+
+    const result = await prisma.player.updateMany({
+      where: { active: true, id: { notIn: [...keep] } },
+      data: { active: false },
+    });
+    deactivated = result.count;
+  }
+
+  return { created: creates.length, updated: updates.length, deactivated };
 }
 
 /** Seed the bundled sample list on first run so the app works out of the box. */
