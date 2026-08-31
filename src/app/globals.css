@@ -1,26 +1,115 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-oswald), "Arial Narrow", system-ui, sans-serif;
+
+  --color-pitch-50: #f2fbf6;
+  --color-pitch-400: #34d399;
+  --color-pitch-500: #10b981;
+  --color-pitch-600: #059669;
+
+  --color-gold-300: #ffd166;
+  --color-gold-400: #ffb020;
+  --color-gold-500: #f59e0b;
+
+  --color-ink-950: #07090c;
+  --color-ink-900: #0b0e12;
+  --color-ink-850: #10141a;
+  --color-ink-800: #151b23;
+  --color-ink-700: #1f2733;
+  --color-ink-600: #2c3644;
+  --color-ink-400: #64748b;
+  --color-ink-300: #8b98a8;
+  --color-ink-100: #e6ebf1;
+
+  --color-role-p: #eab308;
+  --color-role-d: #22c55e;
+  --color-role-c: #3b82f6;
+  --color-role-a: #ef4444;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: #07090c;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #07090c;
+  color: #e6ebf1;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* thin scrollbars for panel lists */
+.scroll-slim::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scroll-slim::-webkit-scrollbar-thumb {
+  background: #2c3644;
+  border-radius: 3px;
+}
+.scroll-slim {
+  scrollbar-width: thin;
+  scrollbar-color: #2c3644 transparent;
+}
+
+@keyframes bid-pop {
+  0% {
+    transform: scale(1);
+  }
+  35% {
+    transform: scale(1.12);
+    color: #ffd166;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.animate-bid-pop {
+  animation: bid-pop 0.35s ease-out;
+}
+
+@keyframes flash-sold {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+  40% {
+    box-shadow: 0 0 60px 8px rgba(16, 185, 129, 0.35);
+  }
+}
+.animate-flash-sold {
+  animation: flash-sold 1.2s ease-out;
+}
+
+@keyframes timer-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+.animate-timer-pulse {
+  animation: timer-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-toast-in {
+  animation: toast-in 0.18s ease-out;
 }

@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuctionMode {
+  LIVE
+  MANUAL
+  WILD
+  POKER
+  SEALED
+}
+
+enum Ruleset {
+  CLASSIC
+  MANTRA
+}
+
+enum AuctionStatus {
+  AUCTION_NOT_STARTED
+  PLAYER_SELECTION
+  PLAYER_ACTIVE
+  PLAYER_CLOSING
+  PLAYER_SOLD
+  PLAYER_UNSOLD
+  PAUSED
+  FINISHED
+}
+
+enum NominationMode {
+  ADMIN_ONLY
+  ROUND_ROBIN
+  RANDOM_PLAYER
+  RANDOM_BY_ROLE
+}
+
+enum Role {
+  P
+  D
+  C
+  A
+}
+
+enum AuctionPlayerStatus {
+  AVAILABLE
+  ACTIVE
+  CLOSING
+  SOLD
+  UNSOLD
+}
+
+model Auction {
+  id                     String         @id @default(cuid())
+  name                   String
+  season                 String         @default("2026/27")
+  mode                   AuctionMode    @default(LIVE)
+  ruleset                Ruleset        @default(CLASSIC)
+  status                 AuctionStatus  @default(AUCTION_NOT_STARTED)
+  pausedFromStatus       AuctionStatus?
+  pausedRemainingMs      Int?
+  startingBudget         Int            @default(500)
+  minBid                 Int            @default(1)
+  minIncrement           Int            @default(1)
+  timerEnabled           Boolean        @default(true)
+  timerSeconds           Int            @default(10)
+  resetTimerOnBid        Boolean        @default(true)
+  closingGraceMs         Int            @default(800)
+  nominationMode         NominationMode @default(ADMIN_ONLY)
+  autoAssign             Boolean        @default(true)
+  passEnabled            Boolean        @default(true)
+  hideSoldPlayers        Boolean        @default(false)
+  adminToken             String         @unique
+  currentAuctionPlayerId String?        @unique
+  nominationTurnIndex    Int            @default(0)
+  botsEnabled            Boolean        @default(false)
+  isDemo                 Boolean        @default(false)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  rosterRules    RosterRule[]
+  teams          FantasyTeam[]
+  auctionPlayers AuctionPlayer[]
+  events         AuctionEvent[]
+}
+
+model RosterRule {
+  id        String  @id @default(cuid())
+  auctionId String
+  role      Role
+  slots     Int
+  auction   Auction @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@unique([auctionId, role])
+}
+
+model FantasyTeam {
+  id          String  @id @default(cuid())
+  auctionId   String
+  name        String
+  managerName String?
+  color       String?
+  sortOrder   Int     @default(0)
+  joinCode    String  @unique
+  pin         String?
+  isBot       Boolean @default(false)
+
+  auction     Auction         @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  participant Participant?
+  purchases   Purchase[]
+  bids        Bid[]
+  passes      Pass[]
+  invitation  Invitation?
+  leaderOf    AuctionPlayer[] @relation("leader")
+  nominated   AuctionPlayer[] @relation("nominator")
+  adjustments CreditAdjustment[]
+}
+
+model Participant {
+  id            String    @id @default(cuid())
+  fantasyTeamId String    @unique
+  token         String    @unique
+  displayName   String?
+  connected     Boolean   @default(false)
+  lastSeenAt    DateTime?
+  createdAt     DateTime  @default(now())
+
+  fantasyTeam FantasyTeam      @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+  watchlist   WatchlistEntry[]
+}
+
+model Invitation {
+  id            String   @id @default(cuid())
+  fantasyTeamId String   @unique
+  token         String   @unique
+  url           String
+  createdAt     DateTime @default(now())
+
+  fantasyTeam FantasyTeam @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+}
+
+model Player {
+  id                String   @id @default(cuid())
+  externalId        String?  @unique
+  firstName         String?
+  lastName          String?
+  displayName       String
+  searchName        String   @default("")
+  teamName          String
+  teamAbbr          String
+  role              Role
+  mantraRoles       String[]
+  initialQuotation  Int      @default(1)
+  currentQuotation  Int      @default(1)
+  fvm               Int?
+  imageUrl          String?
+  active            Boolean  @default(true)
+  updatedAt         DateTime @updatedAt
+  createdAt         DateTime @default(now())
+
+  seasonData     PlayerSeasonData[]
+  auctionPlayers AuctionPlayer[]
+  watchlist      WatchlistEntry[]
+
+  @@index([displayName])
+  @@index([searchName])
+  @@index([role, teamAbbr])
+}
+
+model PlayerSeasonData {
+  id               String   @id @default(cuid())
+  playerId         String
+  season           String
+  source           String   @default("csv")
+  initialQuotation Int
+  currentQuotation Int
+  fvm              Int?
+  importedAt       DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, season])
+}
+
+model AuctionPlayer {
+  id           String              @id @default(cuid())
+  auctionId    String
+  playerId     String
+  status       AuctionPlayerStatus @default(AVAILABLE)
+  currentBid   Int?
+  leaderTeamId String?
+  closesAt     DateTime?
+  nominatedById String?
+
+  auction    Auction      @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  player     Player       @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  leaderTeam FantasyTeam? @relation("leader", fields: [leaderTeamId], references: [id], onDelete: SetNull)
+  nominatedBy FantasyTeam? @relation("nominator", fields: [nominatedById], references: [id], onDelete: SetNull)
+  bids       Bid[]
+  passes     Pass[]
+  purchases  Purchase[]
+
+  @@unique([auctionId, playerId])
+  @@index([auctionId, status])
+}
+
+model Bid {
+  id              String   @id @default(cuid())
+  auctionPlayerId String
+  fantasyTeamId   String
+  amount          Int
+  commandId       String   @unique
+  createdAt       DateTime @default(now())
+
+  auctionPlayer AuctionPlayer @relation(fields: [auctionPlayerId], references: [id], onDelete: Cascade)
+  fantasyTeam   FantasyTeam   @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+
+  @@index([auctionPlayerId, createdAt])
+}
+
+model Pass {
+  id              String   @id @default(cuid())
+  auctionPlayerId String
+  fantasyTeamId   String
+  createdAt       DateTime @default(now())
+
+  auctionPlayer AuctionPlayer @relation(fields: [auctionPlayerId], references: [id], onDelete: Cascade)
+  fantasyTeam   FantasyTeam   @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+
+  @@unique([auctionPlayerId, fantasyTeamId])
+}
+
+model Purchase {
+  id              String    @id @default(cuid())
+  auctionPlayerId String
+  fantasyTeamId   String
+  price           Int
+  voided          Boolean   @default(false)
+  voidedAt        DateTime?
+  voidReason      String?
+  createdAt       DateTime  @default(now())
+
+  auctionPlayer AuctionPlayer @relation(fields: [auctionPlayerId], references: [id], onDelete: Cascade)
+  fantasyTeam   FantasyTeam   @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+
+  @@index([fantasyTeamId, voided])
+  @@index([auctionPlayerId])
+}
+
+/// Ledger of manual credit corrections (release refund retention, transfer
+/// adjustments). Positive amount = extra charge, negative = credit back.
+/// Derived credits = budget - active purchases - adjustments.
+model CreditAdjustment {
+  id            String   @id @default(cuid())
+  fantasyTeamId String
+  amount        Int
+  reason        String
+  createdAt     DateTime @default(now())
+
+  fantasyTeam FantasyTeam @relation(fields: [fantasyTeamId], references: [id], onDelete: Cascade)
+
+  @@index([fantasyTeamId])
+}
+
+model AuctionEvent {
+  id        String   @id @default(cuid())
+  auctionId String
+  type      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  auction Auction @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+
+  @@index([auctionId, createdAt])
+}
+
+model WatchlistEntry {
+  id            String  @id @default(cuid())
+  participantId String
+  playerId      String
+  priority      Int     @default(3)
+  targetPrice   Int?
+  maxPrice      Int?
+  notes         String?
+
+  participant Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  player      Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([participantId, playerId])
+}
