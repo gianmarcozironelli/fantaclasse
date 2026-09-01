@@ -64,8 +64,16 @@ beforeAll(async () => {
     teams.push({ id: t.id, name: t.name });
   }
 
-  const attackers = await prisma.player.findMany({ where: { role: "A" }, take: 4 });
-  const others = await prisma.player.findMany({ where: { role: "D" }, take: 2 });
+  // only active players can be put up for auction, so the fixture must not
+  // pick ones retired by a full list import
+  const attackers = await prisma.player.findMany({
+    where: { role: "A", active: true },
+    take: 4,
+  });
+  const others = await prisma.player.findMany({
+    where: { role: "D", active: true },
+    take: 2,
+  });
   players = [...attackers, ...others].map((p) => ({
     id: p.id,
     displayName: p.displayName,
