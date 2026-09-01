@@ -47,6 +47,47 @@
   .fnote{color:var(--orange);font-size:10px;margin-top:3px;line-height:1.3}
   .frole{color:var(--tx2);font-weight:700;margin-right:3px}
   #formta{width:100%;min-height:200px;font-size:11px}
+  #formgrid.pitchmode{grid-template-columns:repeat(auto-fill,minmax(318px,1fr))}
+
+  .pcard{background:var(--panel);border:1px solid var(--line);border-radius:7px;overflow:hidden}
+  .pch{display:flex;justify-content:space-between;align-items:baseline;padding:3px 7px 0}
+  .pch .nm{font-weight:700;font-size:12.5px}
+  .pch .mod{color:var(--acc);font-weight:700}
+  .pch .lib{color:var(--tx2);font-size:10px}
+  .pcs{padding:0 7px 3px;color:var(--tx2);font-size:10px}
+  .pitch{position:relative;display:flex;flex-direction:column;justify-content:space-between;
+    gap:3px;padding:8px 3px;min-height:236px;border-top:1px solid var(--line);
+    background:repeating-linear-gradient(0deg,#16311f 0 26px,#193723 26px 52px)}
+  .pitch::before{content:"";position:absolute;left:5px;right:5px;top:5px;bottom:5px;
+    border:1px solid rgba(255,255,255,.10);border-radius:3px;pointer-events:none}
+  .pitch::after{content:"";position:absolute;left:32%;right:32%;bottom:5px;height:16px;
+    border:1px solid rgba(255,255,255,.10);border-bottom:none;pointer-events:none}
+  .pline{display:flex;justify-content:space-evenly;align-items:flex-start;gap:2px;position:relative;z-index:1}
+  .pslot{flex:1 1 0;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px}
+  .pslot .vs{font-style:normal;color:rgba(255,255,255,.45);font-size:9px;line-height:1}
+  .pp{display:block;max-width:100%;text-align:center;cursor:pointer;line-height:1.15;
+    padding:1px 3px;border-radius:4px;background:rgba(6,14,9,.72);border:1px solid rgba(255,255,255,.12);
+    border-top-width:2px;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .pp.rP{background:#4a3070;border-top-color:#b48fe8}
+  .pp.rD{background:#17512f;border-top-color:#5fd396}
+  .pp.rC{background:#1a3f6d;border-top-color:#6aa8f5}
+  .pp.rA{background:#6f2828;border-top-color:#f08080}
+  .pp b{color:#fff}
+  .pp .meta,.pp .meta span{color:rgba(255,255,255,.72)}
+  .pp .meta b{display:inline;font-size:9px;color:#fff}
+  .pp:hover{background:var(--acc);border-color:var(--acc);text-shadow:none}
+  .pp:hover b,.pp:hover .meta,.pp:hover .meta span,.pp:hover .num{color:#08110b}
+  .pp b{display:block;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pp .num{display:inline-block;font-style:normal;font-size:9px;color:rgba(255,255,255,.55);margin-right:3px;vertical-align:1px}
+  .pp .meta{display:block;font-style:normal;font-size:9px;color:var(--tx2);font-variant-numeric:tabular-nums}
+  .pp .meta .q{color:var(--tx2);opacity:.8}
+  .pp .nw{display:block;font-style:normal;font-size:8px;font-weight:700;color:#ffcf9a;letter-spacing:.03em}
+  .pp.unm{cursor:default;opacity:.5;border-top-color:rgba(255,255,255,.12)}
+  .pp.unm:hover{background:rgba(6,14,9,.72);border-color:rgba(255,255,255,.12)}
+  .pp.unm:hover b{color:var(--tx)}
+  .pp.gone{cursor:default;background:transparent;border:1px dashed rgba(255,255,255,.16);
+    color:var(--tx2);font-size:9px;opacity:.65;padding:3px}
+  .pp.gone:hover{background:transparent;border-color:rgba(255,255,255,.16);color:var(--tx2)}
   #sliderbox{display:flex;align-items:center;gap:4px;color:var(--tx2);white-space:nowrap}
   #mult{width:90px;accent-color:var(--acc)}
   #multval{color:var(--tx);font-weight:600;min-width:2ch}
@@ -164,6 +205,7 @@
   <div id="formview">
     <div id="formbar">
       <button id="formimportbtn">📋 Incolla probabili formazioni</button>
+      <button id="formmode" class="active">⚽ Campo</button>
       <span id="formstatus"></span>
       <span class="spacer"></span>
       <span>Clic su un giocatore = assegna. I chiamati spariscono.</span>
@@ -583,17 +625,21 @@ function parseFormazioni(text){
     if (!cur || !pending.trim()) { pending=''; return; }
     const groups = pending.split(';').map(g=>g.trim()).filter(Boolean);
     for (let gi=0; gi<groups.length; gi++){
+      let nSlot=0;
       for (let tok of groups[gi].split(',')){
         tok = tok.replace(/\bAll\.?:?.*$/i,'').replace(/\d+\s*%/g,'').replace(/[().]+$/,'').trim();
         if (!tok) continue;
         const alts = tok.split(/\s*\/\s*|\s+o\s+/).map(a=>a.trim()).filter(Boolean);
-        const slot = alts.map(nm=>{
+        const slot = alts.map(raw=>{
+          let num=null;
+          const nm = raw.replace(/^(\d{1,2})[.\s]+/, (m,d)=>{ num=+d; return ''; }).trim();
           const p = matchName(nm, cur.sq, roleForGroup(gi, groups.length));
-          if (p){ matched++; return {id:p.id}; }
-          unmatched++; return {nm};
+          if (p){ matched++; return {id:p.id, n:num}; }
+          unmatched++; return {nm, n:num};
         });
-        cur.slots.push(slot);
+        cur.slots.push(slot); nSlot++;
       }
+      if (nSlot) cur.groups.push(nSlot);
     }
     pending='';
   };
@@ -605,7 +651,7 @@ function parseFormazioni(text){
     if (hm && sq){
       flush();
       if (cur) out.push(cur);
-      cur = {sq, mod:hm[2].replace(/\s/g,''), slots:[], note:''};
+      cur = {sq, mod:hm[2].replace(/\s/g,''), slots:[], groups:[], note:''};
       pending = t.slice(hm[0].length);
       continue;
     }
@@ -618,18 +664,28 @@ function parseFormazioni(text){
   return {teams:out, matched, unmatched};
 }
 
-// probabili formazioni Gazzetta (2ª giornata) precaricate dagli screenshot dell'utente
+// probabili formazioni Gazzetta 2ª giornata, trascritte dagli screenshot (numero di maglia incluso)
 const GAZZETTA = [
-  {sq:'Parma',    mod:'4-3-3',   all:'Cuesta',       match:'Parma-Monza · 15:00',      xi:'Corvi; Delprato, Troilo, Ndiaye, Valeri; Bernabé, Konate, Keita; Britschgi, Toure, Lontani'},
-  {sq:'Monza',    mod:'3-4-2-1', all:'Juric',        match:'Parma-Monza · 15:00',      xi:'Thiam; Carboni, Lucchesi, Kouadio; Mangas, Mout, Foe Ondoa, Birindelli; Cutrone, Colpani; Varela'},
-  {sq:'Bologna',  mod:'4-2-3-1', all:'',             match:'Bologna-Sassuolo',         xi:'Skorupski; Holm, Helland, Heggem, Miranda; Moro, Ferguson; Bernardeschi, Odgaard, Cambiaghi; Piccoli'},
-  {sq:'Sassuolo', mod:'4-3-3',   all:'',             match:'Bologna-Sassuolo',         xi:'Muric; Cinquegrano, Idzes, Leysen, Doig; Bakola, Matic, Adzic; Volpato, Bowie, Laurientè'},
-  {sq:'Juventus', mod:'4-2-3-1', all:'',             match:'Juventus-Milan · dom 6/9', xi:'Vicario; Kalulu, Bremer, Kelly, Celik; Locatelli, Douglas Luiz; Conceiçao, Nico Gonzalez, Alajbegovic; Kolo Muani'},
-  {sq:'Milan',    mod:'3-4-2-1', all:'',             match:'Juventus-Milan · dom 6/9', xi:'Maignan; Pavlovic, De Winter, Gila; Estupinan, Musah, Jashari, Chukwueze; Cisse, Loftus-Cheek; Ramos'},
-  {sq:'Cagliari', mod:'4-3-2-1', all:'Pisacane',     match:'Cagliari-Lecce',           xi:'Caprile; Ze Pedro, Deiola, Rodriguez, Obert; Romano, Winks, Fazzini; Adopo, Maldini; Mendy'},
-  {sq:'Lecce',    mod:'3-5-2',   all:'Di Francesco', match:'Cagliari-Lecce',           xi:'Falcone; Tiago Gabriel, Gaspar, Siebert; Gallo, Gorter, Ngom, Coulibaly, Veiga; Stulic, Pierotti'},
-  {sq:'Udinese',  mod:'3-4-2-1', all:'Runjaic',      match:'Udinese-Lazio · 20:45',    xi:'Okoye; Abankwah, Solet, Ebosse; Vojvoda, Piotrowski, Karlstrom, Kamara; Unai Gomez, Ekkelenkamp; Davis'},
-  {sq:'Lazio',    mod:'4-3-3',   all:'Gattuso',      match:'Udinese-Lazio · 20:45',    xi:'Mandas; Floriani, Doekhi, Provstgaard, Pedraza; Frattesi, Belahyane, Taylor; Cancellieri, Dia, Zaccagni'},
+  {sq:'Parma',    mod:'4-3-3',   all:'Cuesta',       match:'Parma-Monza · 15:00',
+   xi:'40 Corvi; 15 Delprato, 37 Troilo, 3 Ndiaye, 14 Valeri; 10 Bernabé, 47 Konate, 16 Keita; 27 Britschgi, 19 Toure, 76 Lontani'},
+  {sq:'Monza',    mod:'3-4-2-1', all:'Juric',        match:'Parma-Monza · 15:00',
+   xi:'20 Thiam; 44 Carboni, 3 Lucchesi, 60 Kouadio; 7 Mangas, 80 Mout, 8 Foe Ondoa, 19 Birindelli; 10 Cutrone, 28 Colpani; 9 Varela'},
+  {sq:'Bologna',  mod:'4-2-3-1', all:'',             match:'Bologna-Sassuolo',
+   xi:'1 Skorupski; 2 Holm, 5 Helland, 17 Heggem, 33 Miranda; 6 Moro, 19 Ferguson; 10 Bernardeschi, 21 Odgaard, 28 Cambiaghi; 91 Piccoli'},
+  {sq:'Sassuolo', mod:'4-3-3',   all:'',             match:'Bologna-Sassuolo',
+   xi:'49 Muric; 3 Doig, 16 Leysen, 21 Idzes, 46 Cinquegrano; 17 Adzic, 18 Matic, 50 Bakola; 45 Laurientè, 9 Bowie, 7 Volpato'},
+  {sq:'Juventus', mod:'4-2-3-1', all:'',             match:'Juventus-Milan · dom 6/9',
+   xi:'25 Vicario; 15 Kalulu, 3 Bremer, 6 Kelly, 2 Celik; 5 Locatelli, 12 Douglas Luiz; 7 Conceiçao, 31 Nico Gonzalez, 17 Alajbegovic; 9 Kolo Muani'},
+  {sq:'Milan',    mod:'3-4-2-1', all:'',             match:'Juventus-Milan · dom 6/9',
+   xi:'16 Maignan; 31 Pavlovic, 5 De Winter, 34 Gila; 2 Estupinan, 80 Musah, 30 Jashari, 21 Chukwueze; 70 Cisse, 8 Loftus-Cheek; 9 Ramos'},
+  {sq:'Cagliari', mod:'4-3-2-1', all:'Pisacane',     match:'Cagliari-Lecce',
+   xi:'1 Caprile; 2 Ze Pedro, 14 Deiola, 15 Rodriguez, 33 Obert; 4 Romano, 6 Winks, 10 Fazzini; 8 Adopo, 70 Maldini; 31 Mendy'},
+  {sq:'Lecce',    mod:'3-5-2',   all:'Di Francesco', match:'Cagliari-Lecce',
+   xi:'30 Falcone; 44 Tiago Gabriel, 4 Gaspar, 5 Siebert; 25 Gallo, 28 Gorter, 79 Ngom, 29 Coulibaly, 17 Veiga; 9 Stulic, 50 Pierotti'},
+  {sq:'Udinese',  mod:'3-4-2-1', all:'Runjaic',      match:'Udinese-Lazio · lun 20:45',
+   xi:'40 Okoye; 14 Abankwah, 28 Solet, 77 Ebosse; 23 Vojvoda, 24 Piotrowski, 8 Karlstrom, 11 Kamara; 46 Unai Gomez, 32 Ekkelenkamp; 9 Davis'},
+  {sq:'Lazio',    mod:'4-3-3',   all:'Gattuso',      match:'Udinese-Lazio · lun 20:45',
+   xi:'35 Mandas; 23 Pedraza, 25 Provstgaard, 5 Doekhi, 15 Floriani; 24 Taylor, 21 Belahyane, 16 Frattesi; 10 Zaccagni, 19 Dia, 22 Cancellieri'},
 ];
 const DEFAULT_FORM = GAZZETTA.map(t=>{
   const parsed = parseFormazioni(`${t.sq} (${t.mod}): ${t.xi}.`).teams[0];
@@ -644,29 +700,72 @@ function activeForm(){
   return [...m.values()].sort((a,b)=>a.sq.localeCompare(b.sq));
 }
 
-function fpHtml(entry, am){
-  if (entry.nm) return `<span class="fp unm" title="non trovato nel listone">${esc(entry.nm)}</span>`;
-  const p = byId.get(entry.id);
-  if (!p || am.has(p.id)) return '';
-  const t = tetto(p);
-  const nuovo = !p.st ? ' <span class="badge b-new" title="Neo acquisto: zero dati Serie A">NUOVO</span>' : '';
-  return `<span class="fp" data-fid="${p.id}" title="${p.r} · Fm ${p.fm!=null?f2(p.fm):'—'} · Qt.A ${p.qta} · Tetto ${t??'—'}">${esc(p.nome)}${p.fm!=null?` <span class="fm">${f2(p.fm)}</span>`:''}</span>${nuovo}`;
+// reparti da disegnare in campo: i gruppi separati da ';' se coerenti, altrimenti il modulo
+function lineCounts(tm){
+  const tot = tm.slots.length;
+  const sum = a => a.reduce((x,y)=>x+y,0);
+  if (tm.groups && tm.groups.length>1 && sum(tm.groups)===tot) return tm.groups;
+  const mod = (tm.mod||'').split('-').map(Number).filter(n=>n>0);
+  const c = [1, ...mod];
+  if (mod.length && sum(c)===tot) return c;
+  return [tot];
 }
 
-let view = 'list';
+// ---- casella giocatore in campo ----
+function ppHtml(en, am){
+  const num = en.n ? `<i class="num">${en.n}</i>` : '';
+  if (en.nm) return `<span class="pp unm" title="${esc(en.nm)}: non presente nel listone (non chiamabile)">${num}<b>${esc(en.nm)}</b></span>`;
+  const p = byId.get(en.id);
+  if (!p) return '';
+  const a = am.get(en.id);
+  if (a) return `<span class="pp gone" title="${esc(p.nome)} — preso da ${esc(state.teams[a.team])} per ${a.price}">${esc(state.teams[a.team])} · ${a.price}</span>`;
+  const t = tetto(p);
+  const note = state.notes[p.id];
+  const tip = `${p.nome} · ${p.r} · Fm ${p.fm!=null?f2(p.fm):'—'} · Mv ${p.mv!=null?f2(p.mv):'—'} · Pv ${p.pv??'—'} · Gf ${p.gf??'—'} · Ass ${p.ass??'—'}`
+    + ` · Qt.A ${p.qta} · FVM ${p.fvm} · Tetto ${t??'—'}${note?' · NOTA: '+note:''}`;
+  return `<span class="pp r${p.r}" data-fid="${p.id}" title="${esc(tip)}">${num}<b>${esc(p.nome)}</b>`
+    + `<i class="meta"><b>${p.fm!=null?f2(p.fm):'—'}</b> · ${p.qta}cr`
+    + `${p.st&&p.pv<20?' · Pv'+p.pv:''}${p.rigTot>=2?' ⚽':''}${note?' 📝':''}</i>`
+    + `${!p.st?'<i class="nw">NUOVO</i>':''}</span>`;
+}
+
+let view = 'list', pitch = true;
 function renderForm(){
   if (view!=='form') return;
   const am = assignedMap();
   const af = activeForm();
   const withForm = new Set(af.map(t=>t.sq));
   const nUser = state.form ? state.form.length : 0;
-  $('formstatus').textContent = `${af.length} probabili formazioni (${nUser ? nUser+' incollate, ' : ''}${af.length-nUser} da Gazzetta 2ª giornata) · ${SQUADRE.length-af.length} squadre con rosa completa`;
+  $('formstatus').textContent = `${af.length} formazioni schierate (${nUser ? nUser+' incollate, ' : ''}${af.length-nUser} da Gazzetta) · ${SQUADRE.length-af.length} squadre in rosa completa`;
 
-  const formCard = tm => {
+  const pitchCard = tm => {
+    const counts = lineCounts(tm);
+    let i = 0;
+    const lines = counts.map(c => {
+      const group = tm.slots.slice(i, i+c); i += c;
+      return `<div class="pline">` + group.map(slot =>
+        `<div class="pslot">` + slot.map(en=>ppHtml(en,am)).filter(Boolean).join('<i class="vs">o</i>') + `</div>`
+      ).join('') + `</div>`;
+    }).reverse().join('');
+    const liberi = tm.slots.filter(s=>s.some(e=>e.id && !am.has(e.id))).length;
+    const det = [tm.all?'All. '+tm.all:'', tm.match||''].filter(Boolean).join(' · ');
+    return `<div class="pcard">
+      <div class="pch"><span class="nm">${esc(tm.sq)}</span><span><span class="mod">${esc(tm.mod||'')}</span> <span class="lib" title="slot ancora liberi">${liberi}/${tm.slots.length}</span></span></div>
+      ${det?`<div class="pcs">${esc(det)}</div>`:''}
+      <div class="pitch">${lines}</div>
+      ${tm.note?`<div class="fnote">${esc(tm.note)}</div>`:''}
+    </div>`;
+  };
+
+  const listCard = tm => {
     const slots = tm.slots.map(slot=>{
-      const parts = slot.map(en=>fpHtml(en,am)).filter(Boolean);
-      if (!parts.length) return '';
-      return `<div class="fslot">${parts.join(' <span class="alt">/</span> ')}</div>`;
+      const parts = slot.map(en=>{
+        if (en.nm) return `<span class="fp unm">${esc(en.nm)}</span>`;
+        const p = byId.get(en.id);
+        if (!p || am.has(p.id)) return '';
+        return `<span class="fp" data-fid="${p.id}">${esc(p.nome)}${p.fm!=null?` <span class="fm">${f2(p.fm)}</span>`:''}</span>${!p.st?'<span class="badge b-new">NUOVO</span>':''}`;
+      }).filter(Boolean);
+      return parts.length ? `<div class="fslot">${parts.join(' <span class="alt">/</span> ')}</div>` : '';
     }).filter(Boolean).join('');
     const det = [tm.all?'All. '+tm.all:'', tm.match||''].filter(Boolean).join(' · ');
     return `<div class="fcard"><h4>${esc(tm.sq)} <span class="mod">${esc(tm.mod)}</span></h4>
@@ -674,18 +773,22 @@ function renderForm(){
       ${slots || '<div class="fslot" style="color:var(--tx2)">tutti chiamati</div>'}
       ${tm.note?`<div class="fnote">${esc(tm.note)}</div>`:''}</div>`;
   };
+
   const rosterCard = sq => {
     const rows = ROLES.map(r=>{
       const rr = teamPlayers.get(sq).filter(p=>p.r===r && !am.has(p.id))
         .sort((a,b)=>(b.fm??-1)-(a.fm??-1) || b.qta-a.qta);
       if (!rr.length) return '';
-      return `<div class="fslot"><span class="frole">${r}</span>${rr.map(p=>fpHtml({id:p.id},am)).join(' <span class="alt">·</span> ')}</div>`;
+      return `<div class="fslot"><span class="frole">${r}</span>` + rr.map(p=>
+        `<span class="fp" data-fid="${p.id}" title="Fm ${p.fm!=null?f2(p.fm):'—'} · Qt.A ${p.qta}">${esc(p.nome)}${p.fm!=null?` <span class="fm">${f2(p.fm)}</span>`:''}</span>${!p.st?'<span class="badge b-new">NUOVO</span>':''}`
+      ).join(' <span class="alt">·</span> ') + `</div>`;
     }).join('');
     return `<div class="fcard"><h4>${esc(sq)} <span class="mod">rosa completa</span></h4>${rows}</div>`;
   };
 
+  $('formgrid').className = pitch ? 'pitchmode' : '';
   $('formgrid').innerHTML =
-    af.map(formCard).join('') +
+    af.map(pitch ? pitchCard : listCard).join('') +
     SQUADRE.filter(sq=>!withForm.has(sq)).map(rosterCard).join('');
 }
 
@@ -871,6 +974,12 @@ $('tab_form').addEventListener('click', ()=>setView('form'));
 $('formgrid').addEventListener('click', e=>{
   const fp = e.target.closest('[data-fid]');
   if (fp) openAssign(+fp.dataset.fid, fp, false);
+});
+$('formmode').addEventListener('click', ()=>{
+  pitch = !pitch;
+  $('formmode').textContent = pitch ? '⚽ Campo' : '☰ Lista';
+  $('formmode').classList.toggle('active', pitch);
+  renderForm();
 });
 $('formimportbtn').addEventListener('click', ()=>{ $('formreport').textContent=''; $('formmodal').classList.add('open'); });
 $('formparse').addEventListener('click', ()=>{
