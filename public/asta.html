@@ -47,6 +47,8 @@
   .fnote{color:var(--orange);font-size:10px;margin-top:3px;line-height:1.3}
   .frole{color:var(--tx2);font-weight:700;margin-right:3px}
   #formta{width:100%;min-height:200px;font-size:11px}
+  .miniform{font-size:9.5px;padding:0 5px;color:var(--tx2)}
+  .miniform:hover{color:var(--acc)}
   #formgrid.pitchmode{grid-template-columns:repeat(auto-fill,minmax(318px,1fr))}
 
   #strip{display:flex;gap:6px;align-items:stretch;padding:4px 8px;background:#11131a;border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap}
@@ -334,7 +336,7 @@
 
 <div class="modal" id="formmodal"><div class="mbox" style="min-width:560px">
   <h3>Incolla le probabili formazioni</h3>
-  <p style="color:var(--tx2);margin:0 0 6px">Copia il testo da Gazzetta/Fantacalcio e incollalo qui. Formato riconosciuto: <code>Inter (3-5-2): Sommer; Pavard, Acerbi, Bastoni; …</code> — i ballottaggi come <code>Frattesi/Barella</code> occupano lo stesso slot; righe tipo <code>Indisponibili: …</code> o <code>Ballottaggi: …</code> finiscono in nota sotto la card.</p>
+  <p style="color:var(--tx2);margin:0 0 6px">Sulla pagina della Gazzetta premi <b>VISTA TESTUALE</b>, copia tutto e incolla qui (più partite insieme vanno benissimo). Formato riconosciuto: <code>Inter (3-5-2): Sommer; Pavard, Acerbi, Bastoni; …</code> — i ballottaggi come <code>Frattesi/Barella</code> occupano lo stesso slot; righe tipo <code>Indisponibili: …</code> o <code>Ballottaggi: …</code> finiscono in nota sotto la card.</p>
   <textarea id="formta" placeholder="Inter (3-5-2): Sommer; Pavard, Acerbi, Bastoni; Dumfries, Barella, Calhanoglu, Mkhitaryan, Dimarco; Lautaro Martinez, Thuram.&#10;Indisponibili: Zielinski.&#10;&#10;Milan (4-3-3): …"></textarea>
   <div id="formreport" style="color:var(--tx2);margin-top:4px"></div>
   <div class="mfoot">
@@ -687,9 +689,11 @@ function matchName(raw, sq, roleHint){
   }
   return bestScore>=2 ? best : null;
 }
-function matchSquadra(raw){
+function matchSquadra(raw, strict){
   const rk = norm(raw).trim();
-  for (const s of SQUADRE){ const sk=norm(s); if (sk===rk || rk.includes(sk) || sk.includes(rk)) return s; }
+  for (const s of SQUADRE) if (norm(s)===rk) return s;
+  if (strict) return null;   // riga col solo nome: nessuna approssimazione (Malen non è il Milan)
+  for (const s of SQUADRE){ const sk=norm(s); if (rk.includes(sk) || sk.includes(rk)) return s; }
   for (const s of SQUADRE){ if (lev(rk, norm(s), 2)<=2) return s; }
   return null;
 }
@@ -704,18 +708,21 @@ function roleForGroup(gi, nGroups){
 
 const ANNOT = /^\s*(squalificat\w*|indisponibil\w*|infortunat\w*|diffidat\w*|ballottagg\w*|in dubbio|dubbi)\b[:\s]*/i;
 const TEAMHDR = /^\s*([A-Za-zÀ-ÿ'. ]{3,25}?)\s*\((\d(?:\s*-\s*\d+)+)\)\s*:?\s*/;
+const MODLINE = /^\s*modulo\s*:?\s*(\d(?:\s*-\s*\d)+)\s*$/i;
+const ALLLINE = /^\s*all(?:enatore)?\.?\s*:\s*(.+?)\.?\s*$/i;
+const SKIPLINE = /^\s*(ore|arbitro|stadio|diretta|probabili|formazioni|vista testuale)\s*:?.{0,12}$/i;
 
 function parseFormazioni(text){
   const out=[]; let cur=null; let matched=0, unmatched=0;
   const lines = text.split(/\r?\n/);
-  let pending=''; // testo giocatori che può proseguire su più righe
+  let pending='';
   const flush = () => {
     if (!cur || !pending.trim()) { pending=''; return; }
     const groups = pending.split(';').map(g=>g.trim()).filter(Boolean);
     for (let gi=0; gi<groups.length; gi++){
       let nSlot=0;
       for (let tok of groups[gi].split(',')){
-        tok = tok.replace(/\bAll\.?:?.*$/i,'').replace(/\d+\s*%/g,'').replace(/[().]+$/,'').trim();
+        tok = tok.replace(/\ball(?:enatore)?\.?\s*:?.*$/i,'').replace(/\d+\s*%/g,'').replace(/[().]+$/,'').trim();
         if (!tok) continue;
         const alts = tok.split(/\s*\/\s*|\s+o\s+/).map(a=>a.trim()).filter(Boolean);
         const slot = alts.map(raw=>{
@@ -731,24 +738,38 @@ function parseFormazioni(text){
     }
     pending='';
   };
+  const chiudi = () => { flush(); if (cur) out.push(cur); cur=null; };
+
   for (const line of lines){
     const t = line.trim();
     if (!t){ flush(); continue; }
+
+    // "Inter (3-5-2): Sommer; Pavard, ..."
     const hm = t.match(TEAMHDR);
-    const sq = hm ? matchSquadra(hm[1]) : null;
-    if (hm && sq){
-      flush();
-      if (cur) out.push(cur);
-      cur = {sq, mod:hm[2].replace(/\s/g,''), slots:[], groups:[], note:''};
+    const sqh = hm ? matchSquadra(hm[1]) : null;
+    if (hm && sqh){
+      chiudi();
+      cur = {sq:sqh, mod:hm[2].replace(/\s/g,''), slots:[], groups:[], note:''};
       pending = t.slice(hm[0].length);
       continue;
     }
+    // riga con il solo nome della squadra (vista testuale)
+    if (t.length<=26 && !/[;:,]/.test(t)){
+      const sqb = matchSquadra(t.replace(/[.\d]/g,'').trim(), true);
+      if (sqb){ chiudi(); cur = {sq:sqb, mod:'', slots:[], groups:[], note:''}; pending=''; continue; }
+    }
+    const mm = t.match(MODLINE);                                   // "Modulo: 3-4-2-1"
+    if (mm){ if (cur && !cur.mod) cur.mod = mm[1].replace(/\s/g,''); continue; }
+    const am = t.match(ALLLINE);                                   // "Allenatore: Runjaic"
+    if (am){ if (cur && !cur.all) cur.all = am[1].trim(); continue; }
+    if (SKIPLINE.test(t)) continue;
     if (ANNOT.test(t)){ flush(); if (cur) cur.note += (cur.note?' · ':'') + t.replace(/\.\s*$/,''); continue; }
-    if (cur && pending && /[,;]\s*$/.test(pending)) { pending += ' ' + t; continue; }
-    if (cur && !cur.slots.length && pending) { pending += ' ' + t; continue; }
+    if (!cur) continue;
+    // elenco sulla stessa riga oppure un giocatore per riga
+    if (/[,;]/.test(t)) pending += (pending && !/[,;]\s*$/.test(pending) ? ', ' : ' ') + t;
+    else pending += (pending ? ', ' : '') + t;
   }
-  flush();
-  if (cur) out.push(cur);
+  chiudi();
   return {teams:out, matched, unmatched};
 }
 
@@ -796,6 +817,13 @@ function lineCounts(tm){
   const mod = (tm.mod||'').split('-').map(Number).filter(n=>n>0);
   const c = [1, ...mod];
   if (mod.length && sum(c)===tot) return c;
+  const perRuolo=[]; let ultimo=null;                    // nessun modulo: raggruppa per ruolo
+  for (const slot of tm.slots){
+    const en = slot.find(e=>e.id);
+    const r = en ? byId.get(en.id).r : ultimo;
+    if (r!==ultimo){ perRuolo.push(1); ultimo=r; } else perRuolo[perRuolo.length-1]++;
+  }
+  if (perRuolo.length>1 && sum(perRuolo)===tot) return perRuolo;
   return [tot];
 }
 
@@ -871,7 +899,7 @@ function renderForm(){
         `<span class="fp" data-fid="${p.id}" title="Fm ${p.fm!=null?f2(p.fm):'—'} · Qt.A ${p.qta}">${esc(p.nome)}${p.fm!=null?` <span class="fm">${f2(p.fm)}</span>`:''}</span>${!p.st?'<span class="badge b-new">NUOVO</span>':''}`
       ).join(' <span class="alt">·</span> ') + `</div>`;
     }).join('');
-    return `<div class="fcard"><h4>${esc(sq)} <span class="mod">rosa completa</span></h4>${rows}</div>`;
+    return `<div class="fcard"><h4>${esc(sq)} <button class="miniform" data-formfor="${esc(sq)}" title="incolla la probabile formazione">+ formazione</button></h4>${rows}</div>`;
   };
 
   $('formgrid').className = pitch ? 'pitchmode' : '';
@@ -1488,7 +1516,13 @@ $('formmode').addEventListener('click', ()=>{
   $('formmode').classList.toggle('active', pitch);
   renderForm();
 });
-$('formimportbtn').addEventListener('click', ()=>{ $('formreport').textContent=''; $('formmodal').classList.add('open'); });
+$('formimportbtn').addEventListener('click', ()=>{ $('formreport').textContent=''; $('formmodal').classList.add('open'); $('formta').focus(); });
+$('formgrid').addEventListener('click', e=>{
+  const b = e.target.closest('[data-formfor]');
+  if (!b) return;
+  $('formreport').textContent = 'Incolla la formazione di ' + b.dataset.formfor + ', o di più partite insieme.';
+  $('formmodal').classList.add('open'); $('formta').focus();
+});
 $('formparse').addEventListener('click', ()=>{
   const txt = $('formta').value;
   if (!txt.trim()){ $('formreport').textContent='Incolla prima il testo.'; return; }
