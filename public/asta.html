@@ -210,7 +210,7 @@
   <textarea id="formta" placeholder="Inter (3-5-2): Sommer; Pavard, Acerbi, Bastoni; Dumfries, Barella, Calhanoglu, Mkhitaryan, Dimarco; Lautaro Martinez, Thuram.&#10;Indisponibili: Zielinski.&#10;&#10;Milan (4-3-3): …"></textarea>
   <div id="formreport" style="color:var(--tx2);margin-top:4px"></div>
   <div class="mfoot">
-    <button id="formclear" class="danger">Svuota (torna alle rose complete)</button>
+    <button id="formclear" class="danger">Svuota import (torna alle precaricate)</button>
     <button id="formparse" style="background:var(--acc);color:#0b1220;font-weight:700">Importa</button>
     <button data-close>Chiudi</button>
   </div>
@@ -618,42 +618,75 @@ function parseFormazioni(text){
   return {teams:out, matched, unmatched};
 }
 
+// probabili formazioni Gazzetta (2ª giornata) precaricate dagli screenshot dell'utente
+const GAZZETTA = [
+  {sq:'Parma',    mod:'4-3-3',   all:'Cuesta',       match:'Parma-Monza · 15:00',      xi:'Corvi; Delprato, Troilo, Ndiaye, Valeri; Bernabé, Konate, Keita; Britschgi, Toure, Lontani'},
+  {sq:'Monza',    mod:'3-4-2-1', all:'Juric',        match:'Parma-Monza · 15:00',      xi:'Thiam; Carboni, Lucchesi, Kouadio; Mangas, Mout, Foe Ondoa, Birindelli; Cutrone, Colpani; Varela'},
+  {sq:'Bologna',  mod:'4-2-3-1', all:'',             match:'Bologna-Sassuolo',         xi:'Skorupski; Holm, Helland, Heggem, Miranda; Moro, Ferguson; Bernardeschi, Odgaard, Cambiaghi; Piccoli'},
+  {sq:'Sassuolo', mod:'4-3-3',   all:'',             match:'Bologna-Sassuolo',         xi:'Muric; Cinquegrano, Idzes, Leysen, Doig; Bakola, Matic, Adzic; Volpato, Bowie, Laurientè'},
+  {sq:'Juventus', mod:'4-2-3-1', all:'',             match:'Juventus-Milan · dom 6/9', xi:'Vicario; Kalulu, Bremer, Kelly, Celik; Locatelli, Douglas Luiz; Conceiçao, Nico Gonzalez, Alajbegovic; Kolo Muani'},
+  {sq:'Milan',    mod:'3-4-2-1', all:'',             match:'Juventus-Milan · dom 6/9', xi:'Maignan; Pavlovic, De Winter, Gila; Estupinan, Musah, Jashari, Chukwueze; Cisse, Loftus-Cheek; Ramos'},
+  {sq:'Cagliari', mod:'4-3-2-1', all:'Pisacane',     match:'Cagliari-Lecce',           xi:'Caprile; Ze Pedro, Deiola, Rodriguez, Obert; Romano, Winks, Fazzini; Adopo, Maldini; Mendy'},
+  {sq:'Lecce',    mod:'3-5-2',   all:'Di Francesco', match:'Cagliari-Lecce',           xi:'Falcone; Tiago Gabriel, Gaspar, Siebert; Gallo, Gorter, Ngom, Coulibaly, Veiga; Stulic, Pierotti'},
+  {sq:'Udinese',  mod:'3-4-2-1', all:'Runjaic',      match:'Udinese-Lazio · 20:45',    xi:'Okoye; Abankwah, Solet, Ebosse; Vojvoda, Piotrowski, Karlstrom, Kamara; Unai Gomez, Ekkelenkamp; Davis'},
+  {sq:'Lazio',    mod:'4-3-3',   all:'Gattuso',      match:'Udinese-Lazio · 20:45',    xi:'Mandas; Floriani, Doekhi, Provstgaard, Pedraza; Frattesi, Belahyane, Taylor; Cancellieri, Dia, Zaccagni'},
+];
+const DEFAULT_FORM = GAZZETTA.map(t=>{
+  const parsed = parseFormazioni(`${t.sq} (${t.mod}): ${t.xi}.`).teams[0];
+  if (parsed){ parsed.all = t.all; parsed.match = t.match; }
+  return parsed;
+}).filter(Boolean);
+
+// formazioni attive: quelle incollate dall'utente sovrascrivono le precaricate, squadra per squadra
+function activeForm(){
+  const m = new Map(DEFAULT_FORM.map(t=>[t.sq, t]));
+  if (state.form) for (const t of state.form) m.set(t.sq, t);
+  return [...m.values()].sort((a,b)=>a.sq.localeCompare(b.sq));
+}
+
 function fpHtml(entry, am){
   if (entry.nm) return `<span class="fp unm" title="non trovato nel listone">${esc(entry.nm)}</span>`;
   const p = byId.get(entry.id);
   if (!p || am.has(p.id)) return '';
   const t = tetto(p);
-  return `<span class="fp" data-fid="${p.id}" title="Fm ${p.fm!=null?f2(p.fm):'—'} · Qt.A ${p.qta} · Tetto ${t??'—'}">${esc(p.nome)}${p.fm!=null?` <span class="fm">${f2(p.fm)}</span>`:''}</span>`;
+  const nuovo = !p.st ? ' <span class="badge b-new" title="Neo acquisto: zero dati Serie A">NUOVO</span>' : '';
+  return `<span class="fp" data-fid="${p.id}" title="${p.r} · Fm ${p.fm!=null?f2(p.fm):'—'} · Qt.A ${p.qta} · Tetto ${t??'—'}">${esc(p.nome)}${p.fm!=null?` <span class="fm">${f2(p.fm)}</span>`:''}</span>${nuovo}`;
 }
 
 let view = 'list';
 function renderForm(){
   if (view!=='form') return;
   const am = assignedMap();
-  let html='';
-  if (state.form && state.form.length){
-    $('formstatus').textContent = 'Probabili formazioni importate ('+state.form.length+' squadre)';
-    html = state.form.map(tm=>{
-      const slots = tm.slots.map((slot,si)=>{
-        const parts = slot.map(en=>fpHtml(en,am)).filter(Boolean);
-        if (!parts.length) return '';
-        return `<div class="fslot">${parts.join(' <span class="alt">/</span> ')}</div>`;
-      }).filter(Boolean).join('');
-      return `<div class="fcard"><h4>${esc(tm.sq)} <span class="mod">${esc(tm.mod)}</span></h4>${slots || '<div class="fslot" style="color:var(--tx2)">tutti chiamati</div>'}${tm.note?`<div class="fnote">${esc(tm.note)}</div>`:''}</div>`;
+  const af = activeForm();
+  const withForm = new Set(af.map(t=>t.sq));
+  const nUser = state.form ? state.form.length : 0;
+  $('formstatus').textContent = `${af.length} probabili formazioni (${nUser ? nUser+' incollate, ' : ''}${af.length-nUser} da Gazzetta 2ª giornata) · ${SQUADRE.length-af.length} squadre con rosa completa`;
+
+  const formCard = tm => {
+    const slots = tm.slots.map(slot=>{
+      const parts = slot.map(en=>fpHtml(en,am)).filter(Boolean);
+      if (!parts.length) return '';
+      return `<div class="fslot">${parts.join(' <span class="alt">/</span> ')}</div>`;
+    }).filter(Boolean).join('');
+    const det = [tm.all?'All. '+tm.all:'', tm.match||''].filter(Boolean).join(' · ');
+    return `<div class="fcard"><h4>${esc(tm.sq)} <span class="mod">${esc(tm.mod)}</span></h4>
+      ${det?`<div style="color:var(--tx2);font-size:10px;margin-bottom:2px">${esc(det)}</div>`:''}
+      ${slots || '<div class="fslot" style="color:var(--tx2)">tutti chiamati</div>'}
+      ${tm.note?`<div class="fnote">${esc(tm.note)}</div>`:''}</div>`;
+  };
+  const rosterCard = sq => {
+    const rows = ROLES.map(r=>{
+      const rr = teamPlayers.get(sq).filter(p=>p.r===r && !am.has(p.id))
+        .sort((a,b)=>(b.fm??-1)-(a.fm??-1) || b.qta-a.qta);
+      if (!rr.length) return '';
+      return `<div class="fslot"><span class="frole">${r}</span>${rr.map(p=>fpHtml({id:p.id},am)).join(' <span class="alt">·</span> ')}</div>`;
     }).join('');
-  } else {
-    $('formstatus').textContent = 'Rose complete dal listone (nessuna formazione importata)';
-    html = SQUADRE.map(sq=>{
-      const rows = ROLES.map(r=>{
-        const rr = teamPlayers.get(sq).filter(p=>p.r===r && !am.has(p.id))
-          .sort((a,b)=>(b.fm??-1)-(a.fm??-1) || b.qta-a.qta);
-        if (!rr.length) return '';
-        return `<div class="fslot"><span class="frole">${r}</span>${rr.map(p=>fpHtml({id:p.id},am)).join(' <span class="alt">·</span> ')}</div>`;
-      }).join('');
-      return `<div class="fcard"><h4>${esc(sq)}</h4>${rows}</div>`;
-    }).join('');
-  }
-  $('formgrid').innerHTML = html;
+    return `<div class="fcard"><h4>${esc(sq)} <span class="mod">rosa completa</span></h4>${rows}</div>`;
+  };
+
+  $('formgrid').innerHTML =
+    af.map(formCard).join('') +
+    SQUADRE.filter(sq=>!withForm.has(sq)).map(rosterCard).join('');
 }
 
 // ---- popover assegnazione ----
@@ -851,7 +884,7 @@ $('formparse').addEventListener('click', ()=>{
 });
 $('formclear').addEventListener('click', ()=>{
   state.form = null; save(); renderForm();
-  $('formreport').textContent = 'Formazioni svuotate: la tab mostra le rose complete.';
+  $('formreport').textContent = 'Import svuotato: restano le formazioni Gazzetta precaricate e le rose complete.';
 });
 
 // ---- giro di chiamata ----
