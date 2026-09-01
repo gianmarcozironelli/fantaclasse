@@ -29,6 +29,24 @@
   .spx{color:var(--tx2);font-size:10px;min-width:34px;text-align:right}
   .ototal{padding:3px 4px 0;color:var(--tx2);border-top:1px solid var(--line);margin-top:2px}
   .ototal b{color:var(--tx)}
+
+  #formview{flex:1;overflow:auto;padding:8px;display:none}
+  #formbar{display:flex;gap:8px;align-items:center;margin-bottom:8px;color:var(--tx2)}
+  #formgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(236px,1fr));gap:8px;align-items:start}
+  .fcard{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+  .fcard h4{margin:0 0 3px;display:flex;justify-content:space-between;align-items:baseline}
+  .fcard h4 .mod{color:var(--tx2);font-weight:400}
+  .fslot{padding:0 0 0 2px;line-height:1.55;border-bottom:1px solid #1e222c}
+  .fslot:last-child{border-bottom:none}
+  .fslot .alt{color:var(--tx2)}
+  .fp{cursor:pointer;border-radius:3px;padding:0 2px}
+  .fp:hover{background:var(--acc);color:#0b1220}
+  .fp .fm{color:var(--tx2);font-size:10px}
+  .fp.unm{color:var(--tx2);cursor:default}
+  .fp.unm:hover{background:none;color:var(--tx2)}
+  .fnote{color:var(--orange);font-size:10px;margin-top:3px;line-height:1.3}
+  .frole{color:var(--tx2);font-weight:700;margin-right:3px}
+  #formta{width:100%;min-height:200px;font-size:11px}
   #sliderbox{display:flex;align-items:center;gap:4px;color:var(--tx2);white-space:nowrap}
   #mult{width:90px;accent-color:var(--acc)}
   #multval{color:var(--tx);font-weight:600;min-width:2ch}
@@ -110,6 +128,8 @@
 </head>
 <body>
 <header>
+  <span id="viewtabs"><button id="tab_list" class="active">Listone</button><button id="tab_form">Formazioni</button></span>
+  <span class="sep"></span>
   <span id="girobox">Tocca a <select id="turnsel"></select><button id="skipbtn" title="Passa al prossimo nel giro senza assegnare">Salta ⏭</button></span>
   <span class="sep"></span>
   <input id="search" type="search" placeholder="Nome o cognome… Invio = assegna" autocomplete="off">
@@ -140,6 +160,15 @@
       <tbody id="tbody"></tbody>
     </table>
     <div id="count"></div>
+  </div>
+  <div id="formview">
+    <div id="formbar">
+      <button id="formimportbtn">📋 Incolla probabili formazioni</button>
+      <span id="formstatus"></span>
+      <span class="spacer"></span>
+      <span>Clic su un giocatore = assegna. I chiamati spariscono.</span>
+    </div>
+    <div id="formgrid"></div>
   </div>
   <aside>
     <div class="panel" id="mypanel">
@@ -174,6 +203,18 @@
   <textarea id="np_text" rows="3" style="width:100%"></textarea>
   <div class="popfoot"><button id="np_save">Salva</button><button id="np_close">Chiudi</button></div>
 </div>
+
+<div class="modal" id="formmodal"><div class="mbox" style="min-width:560px">
+  <h3>Incolla le probabili formazioni</h3>
+  <p style="color:var(--tx2);margin:0 0 6px">Copia il testo da Gazzetta/Fantacalcio e incollalo qui. Formato riconosciuto: <code>Inter (3-5-2): Sommer; Pavard, Acerbi, Bastoni; …</code> — i ballottaggi come <code>Frattesi/Barella</code> occupano lo stesso slot; righe tipo <code>Indisponibili: …</code> o <code>Ballottaggi: …</code> finiscono in nota sotto la card.</p>
+  <textarea id="formta" placeholder="Inter (3-5-2): Sommer; Pavard, Acerbi, Bastoni; Dumfries, Barella, Calhanoglu, Mkhitaryan, Dimarco; Lautaro Martinez, Thuram.&#10;Indisponibili: Zielinski.&#10;&#10;Milan (4-3-3): …"></textarea>
+  <div id="formreport" style="color:var(--tx2);margin-top:4px"></div>
+  <div class="mfoot">
+    <button id="formclear" class="danger">Svuota (torna alle rose complete)</button>
+    <button id="formparse" style="background:var(--acc);color:#0b1220;font-weight:700">Importa</button>
+    <button data-close>Chiudi</button>
+  </div>
+</div></div>
 
 <div class="modal" id="regmodal"><div class="mbox">
   <h3>Registro assegnazioni</h3>
@@ -246,7 +287,8 @@ function defaultState(){
     assignments: [],   // {id, team, price}
     notes: {},         // id -> testo
     mult: 60,
-    turn: 0            // indice della squadra a cui tocca chiamare
+    turn: 0,           // indice della squadra a cui tocca chiamare
+    form: null         // probabili formazioni importate: [{sq, mod, slots:[[{id?,nm},…]…], note}]
   };
 }
 let state = defaultState();
@@ -482,7 +524,137 @@ function renderSide(){
   $('undobtn').title = last ? `Annulla: ${byId.get(last.id).nome} a ${state.teams[last.team]} per ${last.price}` : 'Nessuna assegnazione da annullare';
 }
 
-function renderAll(){ renderHead(); renderTable(); renderSide(); }
+function renderAll(){ renderHead(); renderTable(); renderSide(); renderForm(); }
+
+// ---- vista Formazioni ----
+const teamPlayers = new Map();
+for (const p of players){
+  if (!teamPlayers.has(p.squadra)) teamPlayers.set(p.squadra, []);
+  teamPlayers.get(p.squadra).push(p);
+}
+const SQUADRE = [...teamPlayers.keys()].sort();
+
+// abbina un nome scritto da Gazzetta a un giocatore del listone della stessa squadra
+function matchName(raw, sq, roleHint){
+  const cands = teamPlayers.get(sq) || [];
+  const rToks = norm(raw).split(/[^a-z0-9]+/).filter(Boolean);
+  if (!rToks.length) return null;
+  let best=null, bestScore=0;
+  for (const p of cands){
+    let score=0;
+    for (const rt of rToks){
+      let s=0;
+      for (const pt of p.tokens){
+        if (pt===rt) s=Math.max(s,3);
+        else if (pt.startsWith(rt) || rt.startsWith(pt)) s=Math.max(s,2);
+        else if (rt.length>=4 && lev(rt,pt,rt.length>=6?2:1)<=(rt.length>=6?2:1)) s=Math.max(s,1);
+      }
+      score+=s;
+    }
+    if (!score) continue;
+    if (roleHint && p.r===roleHint) score+=1;
+    if (score>bestScore || (score===bestScore && best && p.fvm>best.fvm)){ best=p; bestScore=score; }
+  }
+  return bestScore>=2 ? best : null;
+}
+function matchSquadra(raw){
+  const rk = norm(raw).trim();
+  for (const s of SQUADRE){ const sk=norm(s); if (sk===rk || rk.includes(sk) || sk.includes(rk)) return s; }
+  for (const s of SQUADRE){ if (lev(rk, norm(s), 2)<=2) return s; }
+  return null;
+}
+
+// ruolo atteso per gruppo dal modulo (es. 3-5-2 → P,D,C,A)
+function roleForGroup(gi, nGroups){
+  if (nGroups===4) return ROLES[gi];
+  if (gi===0) return 'P';
+  if (gi===nGroups-1) return 'A';
+  return gi===1 ? 'D' : 'C';
+}
+
+const ANNOT = /^\s*(squalificat\w*|indisponibil\w*|infortunat\w*|diffidat\w*|ballottagg\w*|in dubbio|dubbi)\b[:\s]*/i;
+const TEAMHDR = /^\s*([A-Za-zÀ-ÿ'. ]{3,25}?)\s*\((\d(?:\s*-\s*\d+)+)\)\s*:?\s*/;
+
+function parseFormazioni(text){
+  const out=[]; let cur=null; let matched=0, unmatched=0;
+  const lines = text.split(/\r?\n/);
+  let pending=''; // testo giocatori che può proseguire su più righe
+  const flush = () => {
+    if (!cur || !pending.trim()) { pending=''; return; }
+    const groups = pending.split(';').map(g=>g.trim()).filter(Boolean);
+    for (let gi=0; gi<groups.length; gi++){
+      for (let tok of groups[gi].split(',')){
+        tok = tok.replace(/\bAll\.?:?.*$/i,'').replace(/\d+\s*%/g,'').replace(/[().]+$/,'').trim();
+        if (!tok) continue;
+        const alts = tok.split(/\s*\/\s*|\s+o\s+/).map(a=>a.trim()).filter(Boolean);
+        const slot = alts.map(nm=>{
+          const p = matchName(nm, cur.sq, roleForGroup(gi, groups.length));
+          if (p){ matched++; return {id:p.id}; }
+          unmatched++; return {nm};
+        });
+        cur.slots.push(slot);
+      }
+    }
+    pending='';
+  };
+  for (const line of lines){
+    const t = line.trim();
+    if (!t){ flush(); continue; }
+    const hm = t.match(TEAMHDR);
+    const sq = hm ? matchSquadra(hm[1]) : null;
+    if (hm && sq){
+      flush();
+      if (cur) out.push(cur);
+      cur = {sq, mod:hm[2].replace(/\s/g,''), slots:[], note:''};
+      pending = t.slice(hm[0].length);
+      continue;
+    }
+    if (ANNOT.test(t)){ flush(); if (cur) cur.note += (cur.note?' · ':'') + t.replace(/\.\s*$/,''); continue; }
+    if (cur && pending && /[,;]\s*$/.test(pending)) { pending += ' ' + t; continue; }
+    if (cur && !cur.slots.length && pending) { pending += ' ' + t; continue; }
+  }
+  flush();
+  if (cur) out.push(cur);
+  return {teams:out, matched, unmatched};
+}
+
+function fpHtml(entry, am){
+  if (entry.nm) return `<span class="fp unm" title="non trovato nel listone">${esc(entry.nm)}</span>`;
+  const p = byId.get(entry.id);
+  if (!p || am.has(p.id)) return '';
+  const t = tetto(p);
+  return `<span class="fp" data-fid="${p.id}" title="Fm ${p.fm!=null?f2(p.fm):'—'} · Qt.A ${p.qta} · Tetto ${t??'—'}">${esc(p.nome)}${p.fm!=null?` <span class="fm">${f2(p.fm)}</span>`:''}</span>`;
+}
+
+let view = 'list';
+function renderForm(){
+  if (view!=='form') return;
+  const am = assignedMap();
+  let html='';
+  if (state.form && state.form.length){
+    $('formstatus').textContent = 'Probabili formazioni importate ('+state.form.length+' squadre)';
+    html = state.form.map(tm=>{
+      const slots = tm.slots.map((slot,si)=>{
+        const parts = slot.map(en=>fpHtml(en,am)).filter(Boolean);
+        if (!parts.length) return '';
+        return `<div class="fslot">${parts.join(' <span class="alt">/</span> ')}</div>`;
+      }).filter(Boolean).join('');
+      return `<div class="fcard"><h4>${esc(tm.sq)} <span class="mod">${esc(tm.mod)}</span></h4>${slots || '<div class="fslot" style="color:var(--tx2)">tutti chiamati</div>'}${tm.note?`<div class="fnote">${esc(tm.note)}</div>`:''}</div>`;
+    }).join('');
+  } else {
+    $('formstatus').textContent = 'Rose complete dal listone (nessuna formazione importata)';
+    html = SQUADRE.map(sq=>{
+      const rows = ROLES.map(r=>{
+        const rr = teamPlayers.get(sq).filter(p=>p.r===r && !am.has(p.id))
+          .sort((a,b)=>(b.fm??-1)-(a.fm??-1) || b.qta-a.qta);
+        if (!rr.length) return '';
+        return `<div class="fslot"><span class="frole">${r}</span>${rr.map(p=>fpHtml({id:p.id},am)).join(' <span class="alt">·</span> ')}</div>`;
+      }).join('');
+      return `<div class="fcard"><h4>${esc(sq)}</h4>${rows}</div>`;
+    }).join('');
+  }
+  $('formgrid').innerHTML = html;
+}
 
 // ---- popover assegnazione ----
 const ap = $('assignpop');
@@ -582,7 +754,7 @@ $('np_close').addEventListener('click', closePops);
 function closePops(){ ap.style.display='none'; np.style.display='none'; }
 document.addEventListener('click', e=>{
   if (!document.contains(e.target)) return; // il click ha ri-renderizzato il suo target (es. selezione squadra nel popover)
-  if (!ap.contains(e.target) && !e.target.closest('[data-assign],[data-edit],[data-redit]')) ap.style.display='none';
+  if (!ap.contains(e.target) && !e.target.closest('[data-assign],[data-edit],[data-redit],[data-fid]')) ap.style.display='none';
   if (!np.contains(e.target) && !e.target.closest('[data-note]')) np.style.display='none';
 });
 document.addEventListener('keydown', e=>{
@@ -649,6 +821,37 @@ $('undobtn').addEventListener('click', ()=>{
   if (!last) return;
   state.turn = (state.turn + NTEAMS - 1) % NTEAMS;
   save(); renderAll(); renderReg();
+});
+
+// ---- switch Listone / Formazioni ----
+function setView(v){
+  view = v;
+  $('tablewrap').style.display = v==='list' ? '' : 'none';
+  $('formview').style.display = v==='form' ? 'block' : 'none';
+  $('tab_list').classList.toggle('active', v==='list');
+  $('tab_form').classList.toggle('active', v==='form');
+  if (v==='form') renderForm();
+}
+$('tab_list').addEventListener('click', ()=>setView('list'));
+$('tab_form').addEventListener('click', ()=>setView('form'));
+
+$('formgrid').addEventListener('click', e=>{
+  const fp = e.target.closest('[data-fid]');
+  if (fp) openAssign(+fp.dataset.fid, fp, false);
+});
+$('formimportbtn').addEventListener('click', ()=>{ $('formreport').textContent=''; $('formmodal').classList.add('open'); });
+$('formparse').addEventListener('click', ()=>{
+  const txt = $('formta').value;
+  if (!txt.trim()){ $('formreport').textContent='Incolla prima il testo.'; return; }
+  const res = parseFormazioni(txt);
+  if (!res.teams.length){ $('formreport').textContent='Nessuna squadra riconosciuta: serve una riga tipo "Inter (3-5-2): Sommer; …"'; return; }
+  state.form = res.teams;
+  save(); renderForm();
+  $('formreport').textContent = `Importate ${res.teams.length} squadre · ${res.matched} giocatori agganciati al listone · ${res.unmatched} non trovati (restano in grigio)`;
+});
+$('formclear').addEventListener('click', ()=>{
+  state.form = null; save(); renderForm();
+  $('formreport').textContent = 'Formazioni svuotate: la tab mostra le rose complete.';
 });
 
 // ---- giro di chiamata ----
