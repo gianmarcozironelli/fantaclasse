@@ -23,7 +23,12 @@
 
   header{background:var(--panel);border-bottom:1px solid var(--line);padding:4px 8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;flex-shrink:0}
   header .sep{width:1px;height:20px;background:var(--line)}
-  #search{width:180px}
+  #search{width:250px}
+  #girobox{display:inline-flex;align-items:center;gap:4px;color:var(--tx2);white-space:nowrap}
+  #turnsel{font-weight:700;color:var(--acc);max-width:120px}
+  .spx{color:var(--tx2);font-size:10px;min-width:34px;text-align:right}
+  .ototal{padding:3px 4px 0;color:var(--tx2);border-top:1px solid var(--line);margin-top:2px}
+  .ototal b{color:var(--tx)}
   #sliderbox{display:flex;align-items:center;gap:4px;color:var(--tx2);white-space:nowrap}
   #mult{width:90px;accent-color:var(--acc)}
   #multval{color:var(--tx);font-weight:600;min-width:2ch}
@@ -105,7 +110,9 @@
 </head>
 <body>
 <header>
-  <input id="search" type="search" placeholder="Cerca nome…  ( / )" autocomplete="off">
+  <span id="girobox">Tocca a <select id="turnsel"></select><button id="skipbtn" title="Passa al prossimo nel giro senza assegnare">Salta ⏭</button></span>
+  <span class="sep"></span>
+  <input id="search" type="search" placeholder="Nome o cognome… Invio = assegna" autocomplete="off">
   <span id="rolebtns"></span>
   <select id="fsquadra"><option value="">Squadra: tutte</option></select>
   <select id="ffascia">
@@ -238,7 +245,8 @@ function defaultState(){
     teams: ['IO','Squadra 2','Squadra 3','Squadra 4','Squadra 5','Squadra 6','Squadra 7','Squadra 8'],
     assignments: [],   // {id, team, price}
     notes: {},         // id -> testo
-    mult: 60
+    mult: 60,
+    turn: 0            // indice della squadra a cui tocca chiamare
   };
 }
 let state = defaultState();
@@ -303,18 +311,47 @@ function sortVal(p, k){
 // piccolo helper per il sort dei rigori
 players.forEach(p=>{ p.rpiuN = () => p.st ? p.st.rpiu : 0; });
 
+// distanza di Levenshtein con soglia, per la ricerca tollerante ai refusi
+function lev(a, b, max){
+  if (Math.abs(a.length-b.length) > max) return max+1;
+  let prev = Array.from({length:b.length+1}, (_,i)=>i);
+  for (let i=1;i<=a.length;i++){
+    const cur=[i];
+    let best=i;
+    for (let j=1;j<=b.length;j++){
+      cur[j] = Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1));
+      if (cur[j]<best) best=cur[j];
+    }
+    if (best>max) return max+1;
+    prev=cur;
+  }
+  return prev[b.length];
+}
+function tokensMatch(p, qTokens, fuzzy){
+  return qTokens.every(qt => {
+    if (p.key.includes(qt)) return true;
+    if (!fuzzy) return false;
+    const maxd = qt.length>=6 ? 2 : qt.length>=4 ? 1 : 0;
+    if (!maxd) return false;
+    return p.tokens.some(pt => lev(qt, pt, maxd) <= maxd);
+  });
+}
+players.forEach(p => { p.tokens = p.key.split(/[^a-z0-9]+/).filter(Boolean); });
+
 function visiblePlayers(){
   const am = assignedMap();
-  const q = norm(flt.q.trim());
-  let list = players.filter(p=>{
+  const qTokens = norm(flt.q.trim()).split(/\s+/).filter(Boolean);
+  const base = p => {
     if (flt.role && p.r!==flt.role) return false;
     if (flt.squadra && p.squadra!==flt.squadra) return false;
     if (flt.fascia && fascia(p.qta)!==flt.fascia) return false;
     if (flt.disp && am.has(p.id)) return false;
     if (flt.stats && !p.st) return false;
-    if (q && !p.key.includes(q)) return false;
     return true;
-  });
+  };
+  let list = players.filter(p => base(p) && (!qTokens.length || tokensMatch(p, qTokens, false)));
+  if (qTokens.length && !list.length) // nessun match esatto: riprova tollerando i refusi
+    list = players.filter(p => base(p) && tokensMatch(p, qTokens, true));
   const {col,dir} = sort;
   const str = (col==='nome'||col==='squadra');
   list.sort((a,b)=>{
@@ -400,7 +437,7 @@ function renderTable(){
 // ---- pannelli laterali ----
 function renderSide(){
   const my = teamInfo(0);
-  $('myname').textContent = state.teams[0];
+  $('myname').textContent = (state.turn===0 ? '▶ ' : '') + state.teams[0];
   $('myres').textContent = my.res;
   $('myspent').textContent = my.spent;
   $('maxbid').textContent = my.empty>0 ? my.maxbid : 'rosa completa';
@@ -426,14 +463,19 @@ function renderSide(){
     ).join('') + '</div>';
   }).join('');
 
+  let totSpent = my.spent;
   $('others').innerHTML = state.teams.slice(1).map((nm,i)=>{
     const t = i+1;
     const ti = teamInfo(t);
+    totSpent += ti.spent;
     const miss = ROLES.map(r=>`${r}${SLOTS[r]-ti.cnt[r]}`).join(' ');
-    return `<div class="oteam"><span class="nm" title="${esc(nm)}">${esc(nm)}</span>
+    return `<div class="oteam"><span class="nm" title="${esc(nm)}">${state.turn===t?'▶ ':''}${esc(nm)}</span>
       <span class="sl" title="slot mancanti per ruolo">${miss}</span>
+      <span class="spx" title="crediti spesi">−${ti.spent}</span>
       <span class="cr ${ti.maxbid<=10?'low':''}" title="residui ${ti.res} · max offerta ${ti.empty>0?ti.maxbid:0}">${ti.res}</span></div>`;
-  }).join('');
+  }).join('') + `<div class="ototal">Stanza: spesi <b>${totSpent}</b> · restano <b>${BUDGET*NTEAMS - totSpent}</b></div>`;
+
+  $('turnsel').innerHTML = state.teams.map((nm,i)=>`<option value="${i}"${i===state.turn?' selected':''}>${esc(nm)}</option>`).join('');
 
   $('undobtn').disabled = state.assignments.length===0;
   const last = state.assignments[state.assignments.length-1];
@@ -450,7 +492,7 @@ function openAssign(id, anchor, editing){
   apPlayer = byId.get(id);
   apEditing = !!editing;
   const existing = assignedMap().get(id);
-  apTeam = existing ? existing.team : null;
+  apTeam = existing ? existing.team : state.turn; // pre-seleziona la squadra di turno nel giro
   $('ap_title').textContent = apPlayer.nome + ' (' + apPlayer.r + ') — ' + (editing?'correggi':'assegna');
   $('ap_price').value = existing ? existing.price : '';
   $('ap_remove').style.display = existing ? '' : 'none';
@@ -505,8 +547,12 @@ $('confirmbtn').addEventListener('click', ()=>{
   if (!(price>0) || apTeam==null) return;
   const i = state.assignments.findIndex(a=>a.id===apPlayer.id);
   if (i>=0) state.assignments[i] = {id:apPlayer.id, team:apTeam, price};
-  else state.assignments.push({id:apPlayer.id, team:apTeam, price});
+  else {
+    state.assignments.push({id:apPlayer.id, team:apTeam, price});
+    state.turn = (state.turn+1) % NTEAMS; // il giro avanza dopo ogni chiamata
+  }
   save(); closePops(); renderAll(); renderReg();
+  $('search').value=''; flt.q=''; renderTable(); $('search').focus();
 });
 $('ap_remove').addEventListener('click', ()=>{
   state.assignments = state.assignments.filter(a=>a.id!==apPlayer.id);
@@ -578,6 +624,15 @@ $('fdisp').addEventListener('change', e=>{ flt.disp = e.target.checked; renderTa
 $('fstats').addEventListener('change', e=>{ flt.stats = e.target.checked; renderTable(); });
 let sT=null;
 $('search').addEventListener('input', e=>{ clearTimeout(sT); sT=setTimeout(()=>{ flt.q = e.target.value; renderTable(); }, 80); });
+// Invio nella ricerca: apri subito l'assegnazione del primo risultato disponibile
+$('search').addEventListener('keydown', e=>{
+  if (e.key==='Escape'){ e.target.value=''; flt.q=''; renderTable(); return; }
+  if (e.key!=='Enter') return;
+  clearTimeout(sT); flt.q = e.target.value; renderTable();
+  if (!flt.q.trim()) return;
+  const btn = document.querySelector('#tbody [data-assign]');
+  if (btn) openAssign(+btn.dataset.assign, btn, false);
+});
 
 // ---- slider tetto ----
 $('mult').value = state.mult;
@@ -592,8 +647,13 @@ $('mult').addEventListener('input', e=>{
 $('undobtn').addEventListener('click', ()=>{
   const last = state.assignments.pop();
   if (!last) return;
+  state.turn = (state.turn + NTEAMS - 1) % NTEAMS;
   save(); renderAll(); renderReg();
 });
+
+// ---- giro di chiamata ----
+$('turnsel').addEventListener('change', e=>{ state.turn = +e.target.value; save(); renderSide(); });
+$('skipbtn').addEventListener('click', ()=>{ state.turn = (state.turn+1) % NTEAMS; save(); renderSide(); });
 
 // ---- registro ----
 function renderReg(){
