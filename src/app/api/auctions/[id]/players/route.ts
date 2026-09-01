@@ -38,20 +38,20 @@ export async function GET(req: NextRequest, { params }: Params) {
         ...(qmin !== undefined || qmax !== undefined
           ? [{ currentQuotation: { ...(qmin !== undefined ? { gte: qmin } : {}), ...(qmax !== undefined ? { lte: qmax } : {}) } }]
           : []),
-        ...(q
-          ? [
-              {
-                OR: [
-                  // searchName is accent-stripped and lowercased, so "leao"
-                  // matches "Leão" and "soule" matches "Soulé"
-                  { searchName: { contains: normalizeSearch(q) } },
-                  { displayName: { contains: q, mode: "insensitive" as const } },
-                  { teamName: { contains: q, mode: "insensitive" as const } },
-                  { teamAbbr: { contains: q, mode: "insensitive" as const } },
-                ],
-              },
-            ]
-          : []),
+        // Every word of the query must match somewhere (name or club), in any
+        // order. The official list abbreviates names as "Martinez L." / "Paz N.",
+        // so "martinez l", "l martinez" and "martinez inter" all find the player.
+        // searchName is accent-stripped, so "soule" matches "Soulé" too.
+        ...normalizeSearch(q)
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((token) => ({
+            OR: [
+              { searchName: { contains: token } },
+              { teamName: { contains: token, mode: "insensitive" as const } },
+              { teamAbbr: { contains: token, mode: "insensitive" as const } },
+            ],
+          })),
       ],
     },
     orderBy:
