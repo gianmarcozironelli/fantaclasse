@@ -49,6 +49,69 @@
   #formta{width:100%;min-height:200px;font-size:11px}
   #formgrid.pitchmode{grid-template-columns:repeat(auto-fill,minmax(318px,1fr))}
 
+  #strip{display:flex;gap:6px;align-items:stretch;padding:4px 8px;background:#11131a;border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap}
+  .sbox{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:2px 8px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .sbox .lb{color:var(--tx2);font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+  .sbox b{font-size:15px;font-weight:800;line-height:1.15}
+  .sbox.max b{font-size:22px;color:var(--green)}
+  .sbox.max b.low{color:var(--red)}
+  .sbox.slot{flex:1;min-width:190px;border-color:var(--acc);background:rgba(77,163,255,.09)}
+  .sbox.slot .obj{font-size:17px;color:var(--acc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sbox.slot .cap{font-size:11px;font-weight:700;color:var(--tx)}
+  .sbox.slot .poi{font-size:9.5px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ocard.giu{border-color:#4a3030}
+  .sbox .pos{color:var(--green)}.sbox .neg{color:var(--red)}
+  .sbox.eyes{flex-direction:row;gap:10px;align-items:center}
+  .sbox.eyes .eye{display:flex;flex-direction:column;line-height:1.1}
+  .v-good{color:var(--green)}.v-mid{color:var(--yellow)}.v-bad{color:var(--red)}
+  #s_banner{flex-shrink:0}
+  .banner{padding:3px 10px;font-weight:700;font-size:13px;background:#1b1f2a;border-bottom:1px solid var(--line)}
+  #fasesel{align-self:center;font-size:10px}
+
+  #objview{flex:1;overflow:auto;padding:6px 8px;display:none}
+  #objbar{display:flex;gap:8px;align-items:center;margin-bottom:6px;color:var(--tx2)}
+  #objgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;align-items:start}
+  .ocol h3{margin:0 0 5px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2)}
+  .ocol h3 .lb{text-transform:none;letter-spacing:0;font-weight:400}
+  .ocol.now h3{color:var(--acc)}
+  .ocard{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:4px 6px;margin-bottom:6px}
+  .ocard.now{border-color:var(--acc)}
+  .ocard.done{opacity:.55}
+  .oh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;color:var(--tx2)}
+  .oh b{color:var(--tx);font-size:12px}
+  .orow{display:grid;grid-template-columns:1fr auto auto;gap:3px;align-items:center;padding:1px 0;border-top:1px solid #1e222c}
+  .orow .on{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .orow .om{grid-column:1/-1;color:var(--tx2);font-size:9.5px;margin:-2px 0 1px}
+  .orow .onota{grid-column:1/-1;color:var(--tx2);font-size:9.5px;font-style:italic}
+  .orow.attivo{background:rgba(77,163,255,.13);border-radius:3px}
+  .orow.attivo .on{font-weight:800;color:var(--acc)}
+  .orow.perso .on{text-decoration:line-through;color:var(--grey)}
+  .orow.mio .on{color:var(--green);font-weight:700}
+  .orow.bloccato .on{color:var(--grey);font-style:italic}
+  .capin{width:46px;padding:0 3px;font-size:10px;text-align:right}
+  .otag{font-size:8.5px;font-weight:800;border-radius:3px;padding:0 3px;margin-left:3px;white-space:nowrap}
+  .otag.mio{background:var(--green);color:#06210f}
+  .otag.perso{background:#3a3f4c;color:#c9ced9}
+  .otag.att{background:var(--acc);color:#08111c}
+  .otag.bloc{background:#4a3030;color:#ffb3b3}
+  .otag.bl{background:var(--red);color:#2a0b0b}
+  .otag.inf{background:#4a4020;color:#ffd28a}
+  .otag.opz{background:#33384a;color:#aab1c2}
+  .mini{padding:0 4px;font-size:10px;line-height:1.3;margin-left:2px}
+  .mini.del{color:var(--tx2);border-color:transparent;background:transparent}
+  .mini.del:hover{color:var(--red);border-color:var(--red)}
+  .orip{border-top:1px dashed var(--line);margin-top:2px;padding-top:2px}
+  .autorip{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:3px;
+    padding:0 4px;margin:1px 2px 0 0;font-size:10px;cursor:pointer}
+  .autorip:hover{border-color:var(--acc);color:var(--acc)}
+  .oadd input{width:100%;margin-top:3px;font-size:10px;padding:1px 4px}
+  .oaddslot{width:100%;font-size:10px;color:var(--tx2)}
+  .ok{color:var(--green);font-size:11px;margin:4px 0}
+  .blwrap{display:flex;align-items:flex-start;gap:4px;margin-top:5px;padding:4px;border:1px solid var(--red);
+    border-radius:4px;background:rgba(255,92,92,.10);color:var(--red);font-size:11px;line-height:1.25}
+  #confirmbtn.overcap{background:var(--red);color:#fff}
+  .pop{max-height:78vh;overflow:auto}
+
   .pcard{background:var(--panel);border:1px solid var(--line);border-radius:7px;overflow:hidden}
   .pch{display:flex;justify-content:space-between;align-items:baseline;padding:3px 7px 0}
   .pch .nm{font-weight:700;font-size:12.5px}
@@ -169,7 +232,7 @@
 </head>
 <body>
 <header>
-  <span id="viewtabs"><button id="tab_list" class="active">Listone</button><button id="tab_form">Formazioni</button></span>
+  <span id="viewtabs"><button id="tab_list" class="active">Listone</button><button id="tab_form">Formazioni</button><button id="tab_obj">🎯 Obiettivi</button></span>
   <span class="sep"></span>
   <span id="girobox">Tocca a <select id="turnsel"></select><button id="skipbtn" title="Passa al prossimo nel giro senza assegnare">Salta ⏭</button></span>
   <span class="sep"></span>
@@ -193,6 +256,18 @@
   <button id="cedbtn">Ceduti</button>
   <button id="setbtn">⚙ Impostazioni</button>
 </header>
+<div id="strip">
+  <div class="sbox max"><span class="lb">Max offerta ora</span><b id="s_max">—</b></div>
+  <div class="sbox slot" id="s_slot"></div>
+  <div class="sbox" id="s_fase"></div>
+  <div class="sbox" id="s_stanza"></div>
+  <div class="sbox eyes" id="s_eye"></div>
+  <select id="fasesel" title="fase dell'asta: auto = dedotta dalla mia rosa">
+    <option value="auto">fase auto</option><option value="P">forza P</option><option value="D">forza D</option>
+    <option value="C">forza C</option><option value="A">forza A</option>
+  </select>
+</div>
+<div id="s_banner"></div>
 <main>
   <div id="tablewrap">
     <div id="cedbanner"></div>
@@ -211,6 +286,14 @@
       <span>Clic su un giocatore = assegna. I chiamati spariscono.</span>
     </div>
     <div id="formgrid"></div>
+  </div>
+  <div id="objview">
+    <div id="objbar">
+      <span class="lb">Superato il cap, lo slot passa da solo al ripiego successivo. ▸ assegna · ✕ toglie · il campo in fondo aggiunge un obiettivo.</span>
+      <span class="spacer"></span>
+      <button id="objreset" class="danger">Ripristina catene</button>
+    </div>
+    <div id="objgrid"></div>
   </div>
   <aside>
     <div class="panel" id="mypanel">
@@ -238,7 +321,10 @@
     <button id="ap_remove" class="danger" style="display:none">Rimuovi</button>
   </div>
   <div id="ap_msgs"></div>
+  <label class="chk blwrap" id="ap_blwrap" style="display:none"><input type="checkbox" id="ap_blok">
+    <span>⛔ BLACKLIST — <span id="ap_blmot"></span>. Confermo comunque</span></label>
 </div>
+<datalist id="allplayers"></datalist>
 
 <div class="pop" id="notepop">
   <h4 id="np_title"></h4>
@@ -330,6 +416,8 @@ function defaultState(){
     notes: {},         // id -> testo
     mult: 60,
     turn: 0,           // indice della squadra a cui tocca chiamare
+    chains: null,      // catene di obiettivi modificate (null = quelle di default)
+    fase: 'auto',      // fase dell'asta forzata a mano
     form: null         // probabili formazioni importate: [{sq, mod, slots:[[{id?,nm},…]…], note}]
   };
 }
@@ -566,7 +654,7 @@ function renderSide(){
   $('undobtn').title = last ? `Annulla: ${byId.get(last.id).nome} a ${state.teams[last.team]} per ${last.price}` : 'Nessuna assegnazione da annullare';
 }
 
-function renderAll(){ renderHead(); renderTable(); renderSide(); renderForm(); }
+function renderAll(){ renderHead(); renderTable(); renderSide(); renderForm(); renderStrip(); renderObj(); }
 
 // ---- vista Formazioni ----
 const teamPlayers = new Map();
@@ -792,6 +880,391 @@ function renderForm(){
     SQUADRE.filter(sq=>!withForm.has(sq)).map(rosterCard).join('');
 }
 
+// ================= MOTORE OBIETTIVI A CATENA =================
+const FASE_BUDGET = {P:14, D:68, C:110, A:284};
+const RISERVA = 24;
+const STANZA_TOT = BUDGET * NTEAMS;   // 4000
+const FASE_NOME = {P:'PORTIERI', D:'DIFENSORI', C:'CENTROCAMPISTI', A:'ATTACCANTI'};
+
+const OBIETTIVI_DEFAULT = {
+  P:[
+    {slot:'P1', catena:[
+      {nome:'Milinkovic-Savic V.',cap:12},{nome:'Perri',cap:12},
+      {nome:'Falcone',cap:10},{nome:'Caprile',cap:10}]},
+    {slot:'P2', catena:[{nome:'QUALSIASI',cap:1}]},
+    {slot:'P3', catena:[{nome:'QUALSIASI',cap:1}]}
+  ],
+  D:[
+    {slot:'D-rigorista', catena:[
+      {nome:'Solet',cap:20,nota:'rigorista Udinese'},{nome:'Bisseck',cap:22},{nome:'Ostigard',cap:18}]},
+    {slot:'D-esterno1', catena:[
+      {nome:'Couto',cap:12,nota:'3 gol 3 assist al Dortmund, titolare 97%'},
+      {nome:'Doekhi',cap:10,nota:'5 gol in Bundesliga, 68 partite di fila da titolare'}]},
+    {slot:'D-esterno2', catena:[
+      {nome:'Spinazzola',cap:14},{nome:'Zappacosta',cap:8},{nome:'Hermoso',cap:12}]},
+    {slot:'D-bonus', catena:[{nome:'Kempf',cap:7},{nome:'Holm',cap:6}]},
+    {slot:'D-riempitivi', quantita:4, catena:[
+      {nome:'Lulli',cap:3},{nome:'Birindelli',cap:6},{nome:'Valle',cap:8},
+      {nome:'Celik',cap:10},{nome:'Pedraza',cap:6},{nome:'Vojvoda',cap:6}]},
+    {slot:'D-bivio Dimarco', opzionale:true, condizione:'bivio_dimarco', catena:[
+      {nome:'Dimarco',cap:75,nota:'solo se la chiamata resta sotto 55: allora si rinuncia a Malen'}]}
+  ],
+  C:[
+    {slot:'C-big', opzionale:true, catena:[
+      {nome:'Calhanoglu',cap:70,nota:'29 rigori su 31. Se lo prendi, togli 40 dal budget A'}]},
+    {slot:'C1', catena:[
+      {nome:'Baturina',cap:42},{nome:'Da Cunha',cap:28,nota:'rigorista Como 4/4'},{nome:'Zielinski',cap:20}]},
+    {slot:'C2', catena:[{nome:'Zambo Anguissa',cap:26},{nome:'Atta',cap:24},{nome:'Conceicao',cap:14}]},
+    {slot:'C3', catena:[{nome:'Atta',cap:24},{nome:'Rodriguez Je.',cap:12,nota:'8 assist'}]},
+    {slot:'C-rigorista', catena:[
+      {nome:'Kessiè',cap:22,nota:'36 rigori segnati in carriera'},
+      {nome:'Schmid',cap:12,nota:'9 su 10 rigori, titolare fisso'}]},
+    {slot:'C-assist', catena:[
+      {nome:'Milla',cap:10,nota:'10 assist in Liga, titolare 97%'},
+      {nome:'Odgaard',cap:8},{nome:'Mandragora',cap:8}]},
+    {slot:'C-riempitivi', quantita:2, catena:[
+      {nome:'Cacciamani',cap:6},{nome:'Fitz-Jim',cap:5},
+      {nome:'Calò',cap:8,nota:'3 rigori attesi'},{nome:'Volpato',cap:4}]}
+  ],
+  A:[
+    {slot:'A-ancora', catena:[
+      {nome:'Malen',cap:'DINAMICO',ancora:true},{nome:'Martinez L.',cap:98,ancora:true},
+      {nome:'NESSUNA_ANCORA',cap:0,ancora:true,nota:'passa allo scenario B'}]},
+    {slot:'A2', catena:[{nome:'Scamacca',cap:56},{nome:'Douvikas',cap:46},{nome:'Hojlund',cap:49}]},
+    {slot:'A3', catena:[{nome:'Krstovic',cap:34},{nome:'Simeone',cap:28},{nome:'Laurientè',cap:22}]},
+    {slot:'A4', catena:[
+      {nome:'Esposito F.P.',cap:24,nota:'titolare al posto di Thuram'},
+      {nome:'Esposito Se.',cap:16},{nome:'Bowie',cap:10}]},
+    {slot:'A5', catena:[{nome:'Bonny',cap:13},{nome:'Neres',cap:13},{nome:'Soulè',cap:13}]},
+    {slot:'A6', catena:[
+      {nome:'Woltemade',cap:15,condizione:'solo_se_yildiz_preso'},
+      {nome:'Varela G.',cap:6},{nome:'Adams A.',cap:12,nota:'rigorista Venezia'}]},
+    {slot:'A-coppia Yildiz', opzionale:true, catena:[
+      {nome:'Yildiz',cap:28,nota:'rientro 26/11, fuori ~11 giornate: Gain pro-rata +0,48. Sblocca Woltemade'}]}
+  ]
+};
+
+const BLACKLIST = [
+  {nome:'Kean',motivo:'Tetto 9 a quotazione 25. FVM 187 per Gain +0,15'},
+  {nome:'De Ketelaere',motivo:'Gain −0,02 con FVM 98'},
+  {nome:'Castro S.',motivo:'Gain −0,11'},
+  {nome:'Ramos G.',motivo:'FVM 228 per 6 gol in Ligue 1 con 13 partite da titolare'},
+  {nome:'Kolo Muani',motivo:'FVM 211 per 1 gol in tutta la stagione'},
+  {nome:'Frattesi',motivo:'0 gol e 0 assist in 14 presenze, FVM 68'},
+  {nome:'Zaccagni',motivo:'Fantamedia 5,96, Gain −0,52'},
+  {nome:'Orsolini',motivo:'Tetto 17, e infortunato ai flessori'},
+  {nome:'Paz N.',motivo:'0 su 2 dal dischetto: prezzato da rigorista, non lo è. Tetto 49'},
+  {nome:'McTominay',motivo:'Deve operarsi'},
+  {nome:'Gila',motivo:'0 gol e 0 assist in 31 presenze, senza modificatore vale 1 credito'},
+  {nome:'Molina N.',motivo:'Qt 18 per stare in panchina dietro Lulli che ne costa 1'},
+  {nome:'Pasalic',motivo:'sotto il replacement'},{nome:'Samardzic',motivo:'sotto il replacement'},
+  {nome:'Politano',motivo:'sotto il replacement'},{nome:'Ederson D.S.',motivo:'sotto il replacement'},
+  {nome:'Sucic P.',motivo:'sotto il replacement'},{nome:'Ramon',motivo:'sotto il replacement'},
+  {nome:'Bellanova',motivo:'sotto il replacement'},{nome:'Delprato',motivo:'sotto il replacement'},
+  {nome:'Gallo',motivo:'sotto il replacement'},{nome:'Cambiaso',motivo:'sotto il replacement'},
+  {nome:'Bernasconi',motivo:'sotto il replacement'},{nome:'Doig',motivo:'sotto il replacement'},
+  {nome:'Fortini',motivo:'sotto il replacement'},{nome:'Norton-Cuffy',motivo:'Ceduto'}
+];
+
+const INFORTUNATI = [
+  {nome:'Berardi'},{nome:'Davis K.'},{nome:'Pinamonti'},{nome:'Casadei'},{nome:'Cataldi'},
+  {nome:'Konè I.',quando:'fino a gennaio'},{nome:'Zaniolo',quando:'1° ottobre'},{nome:'Spence'},
+  {nome:'Rensch'},{nome:'Pellegrini Lo.'},{nome:'Yildiz',quando:'26 novembre — vedi la coppia con Woltemade'}
+];
+
+// ---- risoluzione dei nomi sul listone ----
+const playersByKey = new Map();
+players.forEach(p=>{ if (!playersByKey.has(p.key)) playersByKey.set(p.key, p); });
+const PSEUDO = new Set(['QUALSIASI','NESSUNA_ANCORA']);
+const nameCache = new Map();
+function resolveName(nome){
+  if (!nome || PSEUDO.has(nome)) return null;
+  if (nameCache.has(nome)) return nameCache.get(nome);
+  const k = norm(nome);
+  let p = playersByKey.get(k) || null;
+  if (!p){
+    const toks = k.split(/[^a-z0-9]+/).filter(Boolean);
+    let best=null, score=0;
+    for (const c of players){
+      let s=0;
+      for (const t of toks) for (const pt of c.tokens){
+        if (pt===t) s+=3;
+        else if (pt.startsWith(t)||t.startsWith(pt)) s+=2;
+        else if (t.length>=5 && lev(t,pt,1)<=1) s+=1;
+      }
+      if (s>score || (s===score && best && c.fvm>best.fvm)){ best=c; score=s; }
+    }
+    if (score>=3) p = best;
+  }
+  nameCache.set(nome, p);
+  return p;
+}
+const blacklistById = new Map();
+BLACKLIST.forEach(b=>{ const p=resolveName(b.nome); if (p) blacklistById.set(p.id, b.motivo); });
+const infortunatiById = new Map();
+INFORTUNATI.forEach(i=>{ const p=resolveName(i.nome); if (p) infortunatiById.set(p.id, i.quando||'infortunato'); });
+
+// ---- catene: default o versione modificata dall'utente ----
+function chains(){ return state.chains || OBIETTIVI_DEFAULT; }
+function editChains(){
+  if (!state.chains) state.chains = JSON.parse(JSON.stringify(OBIETTIVI_DEFAULT));
+  return state.chains;
+}
+
+// ---- fase, budget, stanza ----
+function spesoPerRuolo(){
+  const s = {P:0,D:0,C:0,A:0};
+  for (const a of state.assignments) if (a.team===0){ const p=byId.get(a.id); if (p) s[p.r]+=a.price; }
+  return s;
+}
+function faseAuto(){ const c=teamInfo(0).cnt; for (const r of ROLES) if (c[r]<SLOTS[r]) return r; return 'A'; }
+function fase(){ return (state.fase && state.fase!=='auto') ? state.fase : faseAuto(); }
+function budgetFase(){
+  const f=fase(), sp=spesoPerRuolo();
+  let carry=0;
+  for (const r of ROLES){ if (r===f) break; carry += FASE_BUDGET[r]-sp[r]; }
+  const budget = FASE_BUDGET[f]+carry;
+  return {f, base:FASE_BUDGET[f], carry, budget, speso:sp[f], disp:budget-sp[f], sp};
+}
+function creditiStanza(){ return STANZA_TOT - state.assignments.reduce((s,a)=>s+a.price,0); }
+function verdetto(){
+  const c = creditiStanza();
+  if (c > 2200) return {c, cap:110, cls:'bad',  txt:'Il tavolo ha risparmiato: i big andranno a 180-200. Non entrare.'};
+  if (c >= 1800) return {c, cap:135, cls:'mid', txt:'Comportamento normale.'};
+  return {c, cap:141, cls:'good', txt:"Hanno bruciato prima: l'attacco costerà poco."};
+}
+
+// ---- regole condizionali ----
+function mioAcquisto(nome){
+  const p = resolveName(nome); if (!p) return null;
+  const a = assignedMap().get(p.id);
+  return (a && a.team===0) ? a : null;
+}
+function scenarioB(){ const a = mioAcquisto('Dimarco'); return !!(a && a.price < 55); }
+function yildizMio(){ return !!mioAcquisto('Yildiz'); }
+function entryCap(sl, e){
+  if (e.ancora && scenarioB()) return 0;
+  if (e.cap === 'DINAMICO') return verdetto().cap;
+  return e.cap;
+}
+function entryBloccata(sl, e){
+  if (e.ancora && scenarioB()) return 'Architettura B: ancora rinunciata, si riempie con la fascia media';
+  if (e.condizione==='solo_se_yildiz_preso' && !yildizMio())
+    return 'senza Yildiz è solo una scommessa su un prestito secco dietro Kolo Muani';
+  if (entryCap(sl,e)===0 && e.nome!=='NESSUNA_ANCORA') return 'cap 0';
+  return null;
+}
+function segnaleDimarco(){
+  const p = resolveName('Dimarco'); if (!p) return null;
+  const a = assignedMap().get(p.id);
+  if (!a) return null;
+  if (a.team!==0 && a.price > 88) return 'Buon segno: i crediti stanno uscendo dalla stanza';
+  return null;
+}
+
+// ---- stato di uno slot ----
+function slotStato(sl, am){
+  const q = sl.quantita || 1;
+  const entries = sl.catena.map(e=>{
+    const p = resolveName(e.nome);
+    const a = p ? am.get(p.id) : null;
+    const bloc = entryBloccata(sl, e);
+    const pseudo = !p && PSEUDO.has(e.nome);
+    let st = 'attesa';
+    if (a) st = a.team===0 ? 'mio' : 'perso';
+    else if (bloc) st = 'bloccato';
+    else if (!p && !pseudo) st = 'assente';
+    return {e, p, a, bloc, st, cap:entryCap(sl,e), pseudo};
+  });
+  const presi = entries.filter(x=>x.st==='mio').length;
+  const restanti = Math.max(0, q - presi);
+  let n = restanti;
+  for (const x of entries) if (x.st==='attesa' && n>0){ x.st='attivo'; n--; }
+  const attivi = entries.filter(x=>x.st==='attivo');
+  const esaurita = restanti>0 && !attivi.length;
+  const bloccanti = entries.filter(x=>x.st==='bloccato');
+  return {sl, q, entries, presi, restanti, attivi, chiuso: restanti===0, esaurita,
+    rinunciata: esaurita && bloccanti.length>0 && !entries.some(x=>x.st==='attesa'),
+    motivo: bloccanti.length ? bloccanti[0].bloc : null};
+}
+// ripieghi automatici quando la catena si esaurisce
+function autoRipieghi(ruolo, n){
+  const am = assignedMap();
+  const inCatena = new Set();
+  for (const sl of chains()[ruolo]) for (const e of sl.catena){ const p=resolveName(e.nome); if (p) inCatena.add(p.id); }
+  return players.filter(p=>p.r===ruolo && !am.has(p.id) && !blacklistById.has(p.id) && !inCatena.has(p.id) && p.gain>0)
+    .sort((a,b)=>b.gain-a.gain).slice(0,n);
+}
+// slot attivo della fase corrente (il primo non chiuso, gli opzionali per ultimi)
+function slotAttivo(){
+  const f = fase(), am = assignedMap();
+  const sts = chains()[f].map(sl=>slotStato(sl, am));
+  return sts.find(s=>!s.chiuso && !s.sl.opzionale && !s.rinunciata)
+      || sts.find(s=>!s.chiuso && !s.rinunciata)
+      || sts.find(s=>!s.chiuso) || null;
+}
+// cap previsto per un giocatore (catene prima, poi Tetto)
+function capGiocatore(pid){
+  const am = assignedMap();
+  let fallback = null;
+  for (const r of ROLES) for (const sl of chains()[r]){
+    const st = slotStato(sl, am);
+    for (const x of st.entries) if (x.p && x.p.id===pid){
+      const info = {cap:x.cap, slot:sl.slot, stato:x.st, bloc:x.bloc, nota:x.e.nota};
+      if (x.st==='attivo') return info;
+      if (!fallback) fallback = info;
+    }
+  }
+  return fallback;
+}
+
+// ---- striscia sempre visibile ----
+function renderStrip(){
+  const my = teamInfo(0);
+  const bf = budgetFase();
+  const v = verdetto();
+  const sa = slotAttivo();
+  const f = bf.f;
+
+  $('s_max').textContent = my.empty>0 ? my.maxbid : '—';
+  $('s_max').className = my.empty>0 && my.maxbid<20 ? 'low' : '';
+
+  if (sa){
+    const t = sa.attivi[0];
+    let nome, cap, coda = '';
+    if (t){
+      nome = t.pseudo ? (t.e.nome==='QUALSIASI' ? 'chiunque a 1 credito' : '—') : (t.p ? t.p.nome : t.e.nome);
+      cap = t.cap;
+      const dopo = sa.entries.filter(x=>x.st==='attesa').slice(0, 2).map(x=>x.p?x.p.nome:x.e.nome);
+      if (dopo.length) coda = `<span class="poi">poi ${esc(dopo.join(' › '))}</span>`;
+    } else {
+      const ar = autoRipieghi(f, 1)[0];
+      nome = ar ? ar.nome : '—';
+      cap = ar ? (tetto(ar) ?? Math.max(1, ar.qta)) : 1;
+      coda = `<span class="poi">ripiego automatico${sa.rinunciata?' · '+esc(sa.motivo||'slot rinunciato'):' · catena esaurita'}</span>`;
+    }
+    const extra = sa.q>1 ? ` <span class="lb">(${sa.presi}/${sa.q})</span>` : '';
+    $('s_slot').innerHTML = `<span class="lb">Slot attivo · ${esc(sa.sl.slot)}${extra}</span>`
+      + `<b class="obj">${esc(nome)}</b><span class="cap">cap ${cap}</span>${coda}`;
+  } else {
+    $('s_slot').innerHTML = `<span class="lb">Slot attivo</span><b class="obj">fase completa</b>`;
+  }
+
+  $('s_fase').innerHTML = `<span class="lb">Fase ${f} · ${FASE_NOME[f]}</span>`
+    + `<b>${bf.base}${bf.carry?(bf.carry>0?' +'+bf.carry:' '+bf.carry)+' rip.':''} = ${bf.budget}</b>`
+    + `<span class="lb">spesi ${bf.speso} · disponibili <b class="${bf.disp<0?'neg':'pos'}">${bf.disp}</b> · riserva ${RISERVA}</span>`;
+
+  $('s_stanza').innerHTML = `<span class="lb">Crediti in stanza</span><b class="v-${v.cls}">${v.c}</b>`
+    + `<span class="lb">di ${STANZA_TOT}</span>`;
+
+  $('s_eye').innerHTML = `<span class="eye"><span class="lb">Malen</span> <b class="v-${v.cls}">${v.cap}</b></span>`
+    + `<span class="eye"><span class="lb">Calhanoglu</span> <b>70</b></span>`
+    + `<span class="eye"><span class="lb">Nessun portiere sopra</span> <b>20</b></span>`;
+
+  const msg = [];
+  if (f==='A' || fasePassata('C')) msg.push({cls:'v-'+v.cls, t:`FASE C CHIUSA · ${v.c} crediti in stanza — ${v.txt} Tetto Malen ${v.cap}.`});
+  if (f==='D'){ const sd = segnaleDimarco(); if (sd) msg.push({cls:'v-good', t:'⬆ '+sd}); }
+  if (scenarioB()) msg.push({cls:'v-mid', t:"Architettura B attiva: Dimarco preso, l'attacco va su quattro della fascia media."});
+  if (yildizMio()) msg.push({cls:'v-good', t:'Coppia attiva: Yildiz è tuo, Woltemade sbloccato a 15 (copre le prime 11 giornate).'});
+  $('s_banner').innerHTML = msg.map(m=>`<div class="banner ${m.cls}">${esc(m.t)}</div>`).join('');
+  $('s_banner').style.display = msg.length ? '' : 'none';
+}
+function fasePassata(r){ return ROLES.indexOf(fase()) > ROLES.indexOf(r); }
+
+// ---- tab Obiettivi ----
+function renderObj(){
+  if (view!=='obj') return;
+  const am = assignedMap();
+  const fcur = fase();
+  $('objgrid').innerHTML = ROLES.map(r=>{
+    const cards = chains()[r].map((sl,si)=>{
+      const st = slotStato(sl, am);
+      const rows = st.entries.map((x,ei)=>{
+        const nome = x.pseudo ? (x.e.nome==='QUALSIASI'?'chiunque a 1 credito':'nessuna ancora')
+                   : (x.p ? x.p.nome : x.e.nome+' ⚠');
+        const meta = x.p ? `<span class="om">${x.p.squadra} · Fm ${x.p.fm!=null?f2(x.p.fm):'—'} · Qt ${x.p.qta}${tetto(x.p)!=null?' · tetto '+tetto(x.p):''}</span>` : '';
+        let tag='';
+        if (x.st==='mio') tag = `<span class="otag mio">MIO ${x.a.price}</span>`;
+        else if (x.st==='perso') tag = `<span class="otag perso">${esc(state.teams[x.a.team])} ${x.a.price}</span>`;
+        else if (x.st==='bloccato') tag = `<span class="otag bloc" title="${esc(x.bloc||'')}">BLOCCATO</span>`;
+        else if (x.st==='attivo') tag = `<span class="otag att">ATTIVO</span>`;
+        else if (x.st==='assente') tag = `<span class="otag bloc" title="non presente nel listone Leghe FC">NON IN LISTONE</span>`;
+        const bl = x.p && blacklistById.has(x.p.id) ? '<span class="otag bl">BLACKLIST</span>' : '';
+        const inf = x.p && infortunatiById.has(x.p.id) ? `<span class="otag inf" title="${esc(infortunatiById.get(x.p.id))}">INF</span>` : '';
+        return `<div class="orow ${x.st}" data-r="${r}" data-si="${si}" data-ei="${ei}">
+          <span class="on">${esc(nome)}${bl}${inf}</span>
+          <span class="oc"><input class="capin" type="number" min="0" value="${x.cap}" title="cap: oltre questo prezzo si passa al ripiego"></span>
+          <span class="oa">${tag}${x.st==='attivo'&&x.p?`<button class="mini" data-take="${x.p.id}" title="assegna">▸</button>`:''}<button class="mini del" data-del title="togli dalla catena">✕</button></span>
+          ${x.e.nota?`<span class="onota">${esc(x.e.nota)}</span>`:''}
+          ${meta}
+        </div>`;
+      }).join('');
+      const rip = st.esaurita ? autoRipieghi(r, 3).map(p=>
+        `<span class="autorip" data-add="${p.id}" data-r="${r}" data-si="${si}" title="Gain ${f2(p.gain)} · aggiungi alla catena">${esc(p.nome)} <b>${tetto(p)??1}</b></span>`).join('') : '';
+      return `<div class="ocard ${st.chiuso?'done':''} ${st.rinunciata?'giu':''} ${!st.chiuso&&r===fcur?'now':''}">
+        <div class="oh"><b>${esc(sl.slot)}</b><span>${sl.opzionale?'<span class="otag opz">OPZ</span>':''}${st.rinunciata?'<span class="otag bloc" title="'+esc(st.motivo||'')+'">RINUNCIATO</span>':''}${st.presi}/${st.q}</span></div>
+        ${rows}
+        ${st.esaurita?`<div class="orip"><span class="lb">${st.rinunciata?esc(st.motivo||'slot rinunciato'):'catena esaurita'} · ripieghi per Gain:</span>${rip||'—'}</div>`:''}
+        <div class="oadd"><input list="allplayers" placeholder="+ aggiungi obiettivo…" data-r="${r}" data-si="${si}"></div>
+      </div>`;
+    }).join('');
+    const sp = spesoPerRuolo()[r];
+    return `<div class="ocol ${r===fcur?'now':''}"><h3>${r} · ${FASE_NOME[r]} <span class="lb">budget ${FASE_BUDGET[r]} · spesi ${sp}</span></h3>${cards}
+      <button class="oaddslot" data-newslot="${r}">+ nuovo slot</button></div>`;
+  }).join('');
+}
+
+// ---- modifica delle catene ----
+function catenaDi(r, si){ return editChains()[r][si]; }
+function addObiettivo(r, si, pid, cap){
+  const p = byId.get(pid); if (!p) return false;
+  const sl = catenaDi(r, si);
+  if (sl.catena.some(e=>{ const q=resolveName(e.nome); return q && q.id===pid; })) return false;
+  sl.catena.push({nome:p.nome, cap: cap!=null ? cap : (tetto(p) ?? Math.max(1,p.qta))});
+  save(); renderObj(); renderStrip(); return true;
+}
+$('objgrid').addEventListener('click', e=>{
+  const take = e.target.closest('[data-take]');
+  if (take){ openAssign(+take.dataset.take, take, false); return; }
+  const add = e.target.closest('[data-add]');
+  if (add){ addObiettivo(add.dataset.r, +add.dataset.si, +add.dataset.add); return; }
+  const del = e.target.closest('[data-del]');
+  if (del){
+    const row = del.closest('.orow');
+    const sl = catenaDi(row.dataset.r, +row.dataset.si);
+    sl.catena.splice(+row.dataset.ei, 1);
+    if (!sl.catena.length) editChains()[row.dataset.r].splice(+row.dataset.si, 1);
+    save(); renderObj(); renderStrip(); return;
+  }
+  const ns = e.target.closest('[data-newslot]');
+  if (ns){
+    const r = ns.dataset.newslot;
+    const nome = prompt('Nome del nuovo slot (es. "D-esterno3"):');
+    if (!nome) return;
+    editChains()[r].push({slot:nome.trim(), catena:[]});
+    save(); renderObj(); return;
+  }
+});
+$('objgrid').addEventListener('change', e=>{
+  const cap = e.target.closest('.capin');
+  if (cap){
+    const row = cap.closest('.orow');
+    catenaDi(row.dataset.r, +row.dataset.si).catena[+row.dataset.ei].cap = Math.max(0, parseInt(cap.value,10)||0);
+    save(); renderObj(); renderStrip(); return;
+  }
+  const inp = e.target.closest('.oadd input');
+  if (inp){
+    const p = resolveName(inp.value.trim().replace(/\s*\([^)]*\)\s*$/,''));
+    if (!p){ inp.value=''; inp.placeholder='nome non trovato'; return; }
+    addObiettivo(inp.dataset.r, +inp.dataset.si, p.id);
+  }
+});
+$('objreset').addEventListener('click', ()=>{
+  if (!confirm('Ripristinare le catene originali? Le modifiche fatte qui andranno perse.')) return;
+  state.chains = null; save(); renderObj(); renderStrip();
+});
+$('fasesel').addEventListener('change', e=>{ state.fase = e.target.value; save(); renderStrip(); renderObj(); });
+
 // ---- popover assegnazione ----
 const ap = $('assignpop');
 let apPlayer = null, apTeam = null, apEditing = false;
@@ -804,11 +1277,12 @@ function openAssign(id, anchor, editing){
   $('ap_title').textContent = apPlayer.nome + ' (' + apPlayer.r + ') — ' + (editing?'correggi':'assegna');
   $('ap_price').value = existing ? existing.price : '';
   $('ap_remove').style.display = existing ? '' : 'none';
+  $('ap_blok').checked = false;
   renderApTeams();
   updateApMsgs();
   ap.style.display = 'block';
   const r = anchor.getBoundingClientRect();
-  const W = 250, H = 260;
+  const W = 250, H = 330;
   let x = Math.max(6, Math.min(r.left, innerWidth - W - 10));
   let y = r.bottom + 4; if (y + H > innerHeight) y = Math.max(6, r.top - H);
   y = Math.max(6, Math.min(y, innerHeight - H));
@@ -821,7 +1295,7 @@ function renderApTeams(){
 }
 function updateApMsgs(){
   const msgs = [];
-  let block = false;
+  let block = false, overCap = false;
   const price = parseInt($('ap_price').value,10);
   const t = tetto(apPlayer);
   if (apTeam!=null){
@@ -838,17 +1312,46 @@ function updateApMsgs(){
   let overTetto = false;
   if (price>0 && t!=null && price > t){ msgs.push(`<div class="warn">⚠ Prezzo oltre il Tetto consigliato (${t})</div>`); overTetto = true; }
   if (price>0 && t==null && apPlayer.st) msgs.push(`<div class="warn">⚠ Giocatore al livello del sostituto gratuito</div>`);
+  // --- motore obiettivi: cap dello slot, blacklist, infortuni, bivio Dimarco ---
+  let blMotivo = null;
+  if (apTeam===0 && price>0){
+    const bf = budgetFase();
+    const info = capGiocatore(apPlayer.id);
+    const cap = info ? info.cap : null;
+    if (info && info.stato==='bloccato')
+      msgs.push(`<div class="err">✋ ${esc(info.slot)}: obiettivo bloccato — ${esc(info.bloc||'')}</div>`);
+    if (cap!=null && price > cap){
+      overCap = true;
+      msgs.push(`<div class="err">🎯 Oltre il cap di <b>${esc(info.slot)}</b> (${cap}): a questo prezzo si passa al ripiego successivo</div>`);
+    }
+    else if (cap!=null)
+      msgs.push(`<div class="ok">🎯 ${esc(info.slot)} · cap ${cap}${info.nota?' — '+esc(info.nota):''}</div>`);
+    if (apPlayer.r===bf.f && price > bf.disp)
+      msgs.push(`<div class="warn">⚠ Sfondi il budget di fase ${bf.f}: disponibili ${bf.disp}</div>`);
+    const inf = infortunatiById.get(apPlayer.id);
+    if (inf) msgs.push(`<div class="warn">🩹 Infortunato (${esc(inf)})</div>`);
+    if (apPlayer.nome==='Dimarco'){
+      if (price < 55) msgs.push(`<div class="ok">Bivio: sotto 55 lo prendi e passi all'Architettura B (niente Malen)</div>`);
+      else msgs.push(`<div class="warn">Bivio: sopra 55 Dimarco non conviene, tieni l'ancora in attacco</div>`);
+    }
+    blMotivo = blacklistById.get(apPlayer.id) || null;
+  }
+  $('ap_blwrap').style.display = blMotivo ? '' : 'none';
+  if (blMotivo) $('ap_blmot').textContent = blMotivo;
   $('ap_msgs').innerHTML = msgs.join('');
   const btn = $('confirmbtn');
-  btn.disabled = block || apTeam==null || !(price>0);
-  btn.classList.toggle('overtetto', overTetto && !btn.disabled);
-  btn.textContent = overTetto && !btn.disabled ? 'Conferma oltre tetto' : 'Conferma';
+  btn.disabled = block || apTeam==null || !(price>0) || (!!blMotivo && !$('ap_blok').checked);
+  btn.classList.toggle('overtetto', overTetto && !overCap && !btn.disabled);
+  btn.classList.toggle('overcap', overCap && !btn.disabled);
+  btn.textContent = btn.disabled ? 'Conferma'
+    : overCap ? 'Conferma oltre il cap' : (overTetto ? 'Conferma oltre tetto' : 'Conferma');
 }
 $('ap_teams').addEventListener('click', e=>{
   const b = e.target.closest('button[data-team]'); if(!b) return;
   apTeam = +b.dataset.team; renderApTeams(); updateApMsgs();
 });
 $('ap_price').addEventListener('input', updateApMsgs);
+$('ap_blok').addEventListener('change', updateApMsgs);
 $('ap_price').addEventListener('keydown', e=>{ if(e.key==='Enter' && !$('confirmbtn').disabled) $('confirmbtn').click(); });
 $('confirmbtn').addEventListener('click', ()=>{
   const price = parseInt($('ap_price').value,10);
@@ -964,12 +1467,16 @@ function setView(v){
   view = v;
   $('tablewrap').style.display = v==='list' ? '' : 'none';
   $('formview').style.display = v==='form' ? 'block' : 'none';
+  $('objview').style.display = v==='obj' ? 'block' : 'none';
   $('tab_list').classList.toggle('active', v==='list');
   $('tab_form').classList.toggle('active', v==='form');
+  $('tab_obj').classList.toggle('active', v==='obj');
   if (v==='form') renderForm();
+  if (v==='obj') renderObj();
 }
 $('tab_list').addEventListener('click', ()=>setView('list'));
 $('tab_form').addEventListener('click', ()=>setView('form'));
+$('tab_obj').addEventListener('click', ()=>setView('obj'));
 
 $('formgrid').addEventListener('click', e=>{
   const fp = e.target.closest('[data-fid]');
@@ -1094,6 +1601,8 @@ document.querySelectorAll('.modal').forEach(m=>{
 });
 
 // ---- avvio ----
+$('allplayers').innerHTML = players.map(p=>`<option value="${esc(p.nome)}">${esc(p.r+' · '+p.squadra)}</option>`).join('');
+$('fasesel').value = state.fase || 'auto';
 renderAll(); renderReg();
 </script>
 </body>
